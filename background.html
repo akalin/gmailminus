@@ -75,7 +75,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
   if (changeInfo.url) {
     index = getGmailUrlIndex(changeInfo.url);
     if (index != -1) {
-      getInboxCount(function(email, count) {
+      getInboxCount(index, function(email, count) {
         updateUnreadCount(email, count);
       });
     }
@@ -107,21 +107,23 @@ function scheduleRequest() {
 
 // ajax stuff
 function startRequest() {
-  getInboxCount(
-    function(email, count) {
-      loadingAnimation.stop();
-      updateUnreadCount(email, count);
-      scheduleRequest();
-    },
-    function() {
-      loadingAnimation.stop();
-      showLoggedOut();
-      scheduleRequest();
-    }
-  );
+  for (i = 0; i < 3; ++i) {
+    getInboxCount(i, 
+      function(email, count) {
+        loadingAnimation.stop();
+        updateUnreadCount(email, count);
+        scheduleRequest();
+      },
+      function() {
+        loadingAnimation.stop();
+        showLoggedOut();
+        scheduleRequest();
+      }
+    );
+  }
 }
 
-function getInboxCount(onSuccess, onError) {
+function getInboxCount(index, onSuccess, onError) {
   var xhr = new XMLHttpRequest();
   var abortTimerId = window.setTimeout(function() {
     xhr.abort();  // synchronously calls onreadystatechange
@@ -182,7 +184,7 @@ function getInboxCount(onSuccess, onError) {
       handleError();
     }
 
-    xhr.open("GET", getFeedUrl(0), true);
+    xhr.open("GET", getFeedUrl(index), true);
     xhr.send(null);
   } catch(e) {
     console.error(chrome.i18n.getMessage("gmailcheck_exception", e));
