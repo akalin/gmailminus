@@ -210,10 +210,9 @@ function gmailNSResolver(prefix) {
 }
 
 function updateUnreadCount(index, email, count) {
-  if (unreadCounts[index] && unreadCounts[index].count != count) {
+  if (!unreadCounts[index] || unreadCounts[index].count != count) {
     console.info("Updating inbox " + index + ": " + email + ", " + count);
-    unreadCounts[index].email = email;
-    unreadCounts[index].count = count;
+    unreadCounts[index] = { "email": email, "count": count };
     animateFlip();
   }
 }
