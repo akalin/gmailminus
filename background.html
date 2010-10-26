@@ -15,11 +15,7 @@ var unreadCounts = {};
 var loadingAnimation = new LoadingAnimation();
 
 function getGmailUrl() {
-  var url = "https://mail.google.com/";
-  if (localStorage.customDomain)
-    url += localStorage.customDomain + "/";
-  else
-    url += "mail/"
+  var url = "https://mail.google.com/mail/u/0/";
   return url;
 }
 
