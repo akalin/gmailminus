@@ -76,7 +76,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
     index = getGmailUrlIndex(changeInfo.url);
     if (index != -1) {
       getInboxCount(index, function(email, count) {
-        updateUnreadCount(email, count);
+        updateUnreadCount(index, email, count);
       });
     }
   }
@@ -111,7 +111,7 @@ function startRequest() {
     getInboxCount(i, 
       function(email, count) {
         loadingAnimation.stop();
-        updateUnreadCount(email, count);
+        updateUnreadCount(i, email, count);
         scheduleRequest();
       },
       function() {
@@ -198,7 +198,7 @@ function gmailNSResolver(prefix) {
   }
 }
 
-function updateUnreadCount(email, count) {
+function updateUnreadCount(index, email, count) {
   if (unreadCounts[email] != count) {
     unreadCounts[email] = count;
     animateFlip();
