@@ -233,7 +233,7 @@ function animateFlip() {
     drawIconAtRotation();
     unreadCountText = "";
     for (i in unreadCounts) {
-      unreadCountText = unreadCounts[i].count + ",";
+      unreadCountText += unreadCounts[i].count + ",";
     }
     chrome.browserAction.setBadgeText({
       text: unreadCountText
