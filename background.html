@@ -11,7 +11,7 @@ var pollIntervalMax = 1000 * 60 * 60;  // 1 hour
 var requestFailureCount = 0;  // used for exponential backoff
 var requestTimeout = 1000 * 2;  // 5 seconds
 var rotation = 0;
-var unreadCounts = {};
+var unreadCounts = [];
 var loadingAnimation = new LoadingAnimation();
 
 function getGmailUrl(index) {
@@ -92,35 +92,35 @@ function init() {
   chrome.browserAction.setIcon({path: "gmail_logged_in.png"});
   loadingAnimation.start();
 
-  startRequest();
+  for (i = 0; i < 3; ++i) {
+    startRequest(i);
+  }
 }
 
-function scheduleRequest() {
+function scheduleRequest(index) {
   var randomness = Math.random() * 2;
   var exponent = Math.pow(2, requestFailureCount);
   var delay = Math.min(randomness * pollIntervalMin * exponent,
                        pollIntervalMax);
   delay = Math.round(delay);
 
-  window.setTimeout(startRequest, delay);
+  window.setTimeout(function() { startRequest(index); }, delay);
 }
 
 // ajax stuff
-function startRequest() {
-  for (i = 0; i < 3; ++i) {
-    getInboxCount(i, 
-      function(email, count) {
-        loadingAnimation.stop();
-        updateUnreadCount(i, email, count);
-        scheduleRequest();
-      },
-      function() {
-        loadingAnimation.stop();
-        showLoggedOut();
-        scheduleRequest();
-      }
-    );
-  }
+function startRequest(index) {
+  getInboxCount(index, 
+    function(email, count) {
+      loadingAnimation.stop();
+      updateUnreadCount(index, email, count);
+      scheduleRequest(index);
+    },
+    function() {
+      loadingAnimation.stop();
+      showLoggedOut();
+      scheduleRequest(index);
+    }
+  );
 }
 
 function getInboxCount(index, onSuccess, onError) {
@@ -199,8 +199,9 @@ function gmailNSResolver(prefix) {
 }
 
 function updateUnreadCount(index, email, count) {
-  if (unreadCounts[email] != count) {
-    unreadCounts[email] = count;
+  if (unreadCounts[index] && unreadCounts[index].count != count) {
+    unreadCounts[index].email = email;
+    unreadCounts[index].count = count;
     animateFlip();
   }
 }
@@ -220,9 +221,8 @@ function animateFlip() {
     rotation = 0;
     drawIconAtRotation();
     unreadCountText = "";
-    for (email in unreadCounts) {
-      console.info(unreadCounts[email]);
-      unreadCountText = unreadCounts[email] + ",";
+    for (i in unreadCounts) {
+      unreadCountText = unreadCounts[i].count + ",";
     }
     chrome.browserAction.setBadgeText({
       text: unreadCountText
@@ -232,7 +232,7 @@ function animateFlip() {
 }
 
 function showLoggedOut() {
-  unreadCounts = {};
+  unreadCounts = [];
   chrome.browserAction.setIcon({path:"gmail_not_logged_in.png"});
   chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]});
   chrome.browserAction.setBadgeText({text:"?"});
