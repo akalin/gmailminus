@@ -11,7 +11,7 @@ var pollIntervalMax = 1000 * 60 * 60;  // 1 hour
 var requestFailureCount = 0;  // used for exponential backoff
 var requestTimeout = 1000 * 2;  // 5 seconds
 var rotation = 0;
-var unreadCount = -1;
+var unreadCounts = {};
 var loadingAnimation = new LoadingAnimation();
 
 function getGmailUrl() {
@@ -84,8 +84,8 @@ LoadingAnimation.prototype.stop = function() {
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
   if (changeInfo.url && isGmailUrl(changeInfo.url)) {
-    getInboxCount(function(count) {
-      updateUnreadCount(count);
+    getInboxCount(function(email, count) {
+      updateUnreadCount(email, count);
     });
   }
 });
@@ -116,9 +116,9 @@ function scheduleRequest() {
 // ajax stuff
 function startRequest() {
   getInboxCount(
-    function(count) {
+    function(email, count) {
       loadingAnimation.stop();
-      updateUnreadCount(count);
+      updateUnreadCount(email, count);
       scheduleRequest();
     },
     function() {
@@ -135,11 +135,11 @@ function getInboxCount(onSuccess, onError) {
     xhr.abort();  // synchronously calls onreadystatechange
   }, requestTimeout);
 
-  function handleSuccess(count) {
+  function handleSuccess(email, count) {
     requestFailureCount = 0;
     window.clearTimeout(abortTimerId);
     if (onSuccess)
-      onSuccess(count);
+      onSuccess(email, count);
   }
 
   function handleError() {
@@ -156,18 +156,34 @@ function getInboxCount(onSuccess, onError) {
 
       if (xhr.responseXML) {
         var xmlDoc = xhr.responseXML;
+        var success = true;
+        var titleSet = xmlDoc.evaluate("/gmail:feed/gmail:title",
+            xmlDoc, gmailNSResolver, XPathResult.ANY_TYPE, null);
+        var titleNode = titleSet.iterateNext();
+        if (titleNode) {
+          title = titleNode.textContent;
+          var match = /^Gmail - Inbox for (\S+)$/.exec(title);
+          email = match[1];
+        } else {
+          success = false;
+        }
+
         var fullCountSet = xmlDoc.evaluate("/gmail:feed/gmail:fullcount",
             xmlDoc, gmailNSResolver, XPathResult.ANY_TYPE, null);
         var fullCountNode = fullCountSet.iterateNext();
         if (fullCountNode) {
-          handleSuccess(fullCountNode.textContent);
-          return;
+          fullCount = fullCountNode.textContent;
+        } else {
+          success = false;
+        }
+
+        if (success) {
+          handleSuccess(email, fullCount);
         } else {
           console.error(chrome.i18n.getMessage("gmailcheck_node_error"));
+          handleError();
         }
       }
-
-      handleError();
     }
 
     xhr.onerror = function(error) {
@@ -188,9 +204,9 @@ function gmailNSResolver(prefix) {
   }
 }
 
-function updateUnreadCount(count) {
-  if (unreadCount != count) {
-    unreadCount = count;
+function updateUnreadCount(email, count) {
+  if (unreadCounts[email] != count) {
+    unreadCounts[email] = count;
     animateFlip();
   }
 }
@@ -209,15 +225,20 @@ function animateFlip() {
   } else {
     rotation = 0;
     drawIconAtRotation();
+    unreadCountText = "";
+    for (email in unreadCounts) {
+      console.info(unreadCounts[email]);
+      unreadCountText = unreadCounts[email] + ",";
+    }
     chrome.browserAction.setBadgeText({
-      text: unreadCount != "0" ? unreadCount : ""
+      text: unreadCountText
     });
     chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
   }
 }
 
 function showLoggedOut() {
-  unreadCount = -1;
+  unreadCounts = {};
   chrome.browserAction.setIcon({path:"gmail_not_logged_in.png"});
   chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]});
   chrome.browserAction.setBadgeText({text:"?"});
