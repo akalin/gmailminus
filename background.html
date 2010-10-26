@@ -75,6 +75,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
   if (changeInfo.url) {
     index = getGmailUrlIndex(changeInfo.url);
     if (index != -1) {
+      console.info("Detected tab for inbox " + index);
       getInboxCount(index, function(email, count) {
         updateUnreadCount(index, email, count);
       });
@@ -104,18 +105,24 @@ function scheduleRequest(index) {
                        pollIntervalMax);
   delay = Math.round(delay);
 
+  console.info("scheduling request for inbox " + index +
+	       " at " + delay + " ms");
   window.setTimeout(function() { startRequest(index); }, delay);
 }
 
 // ajax stuff
 function startRequest(index) {
+  console.info("starting request for inbox " + index);
   getInboxCount(index, 
     function(email, count) {
+      console.info("request for inbox " + index + " succeeded with " +
+		   email + " and " + count);
       loadingAnimation.stop();
       updateUnreadCount(index, email, count);
       scheduleRequest(index);
     },
     function() {
+      console.info("request for inbox " + index + " failed");
       loadingAnimation.stop();
       showLoggedOut();
       scheduleRequest(index);
@@ -200,6 +207,7 @@ function gmailNSResolver(prefix) {
 
 function updateUnreadCount(index, email, count) {
   if (unreadCounts[index] && unreadCounts[index].count != count) {
+    console.info("Updating inbox " + index + ": " + email + ", " + count);
     unreadCounts[index].email = email;
     unreadCounts[index].count = count;
     animateFlip();
@@ -259,12 +267,14 @@ function goToInbox() {
     for (var i = 0, tab; tab = tabs[i]; i++) {
       if (tab.url) {
         index = getGmailUrlIndex(tab.url);
+        console.info("Going to inbox " + index);
         if (index != -1) {
           chrome.tabs.update(tab.id, {selected: true});
           return;
         }
       }
     }
+    console.info("Going to default inbox");
     chrome.tabs.create({url: getGmailUrl(0)});
   });
 }
