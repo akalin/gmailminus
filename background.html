@@ -23,16 +23,9 @@ function getFeedUrl(index) {
   return getGmailUrl(index) + "feed/atom";
 }
 
-function isGmailUrl(url, index) {
-  // This is the Gmail we're looking for if:
-  // - starts with the correct gmail url
-  // - doesn't contain any other path chars
-  var gmail = getGmailUrl(index);
-  if (url.indexOf(gmail) != 0)
-    return false;
-
-  return url.length == gmail.length || url[gmail.length] == '?' ||
-                       url[gmail.length] == '#';
+function getGmailUrlIndex(url) {
+  var match = /^https:\/\/mail.google.com\/mail\/u\/([012])/.exec(url);
+  return match ? match[1] : -1;
 }
 
 // A "loading" animation displayed while we wait for the first response from
@@ -79,10 +72,13 @@ LoadingAnimation.prototype.stop = function() {
 
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
-  if (changeInfo.url && isGmailUrl(changeInfo.url, 0)) {
-    getInboxCount(function(email, count) {
-      updateUnreadCount(email, count);
-    });
+  if (changeInfo.url) {
+    index = getGmailUrlIndex(changeInfo.url);
+    if (index != -1) {
+      getInboxCount(function(email, count) {
+        updateUnreadCount(email, count);
+      });
+    }
   }
 });
 
@@ -259,9 +255,12 @@ function drawIconAtRotation() {
 function goToInbox() {
   chrome.tabs.getAllInWindow(undefined, function(tabs) {
     for (var i = 0, tab; tab = tabs[i]; i++) {
-      if (tab.url && isGmailUrl(tab.url, 0)) {
-        chrome.tabs.update(tab.id, {selected: true});
-        return;
+      if (tab.url) {
+        index = getGmailUrlIndex(tab.url);
+        if (index != -1) {
+          chrome.tabs.update(tab.id, {selected: true});
+          return;
+        }
       }
     }
     chrome.tabs.create({url: getGmailUrl(0)});
