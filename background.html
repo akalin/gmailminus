@@ -242,10 +242,12 @@ function animateFlip() {
       chrome.browserAction.setBadgeText({
         text: ""
       });
+      chrome.browserAction.setIcon({path: "gmail_no_unread.png"});
     } else {
       chrome.browserAction.setBadgeText({
         text: unreadCount.toString(10)
       });
+      chrome.browserAction.setIcon({path: "gmail_logged_in.png"});
     }
   }
 }
