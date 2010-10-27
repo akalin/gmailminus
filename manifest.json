@@ -1,6 +1,7 @@
 {
   "background_page": "background.html",
   "browser_action": {
+    "default_icon": "gmail_unknown.png",
     "default_title": ""
   },
   "default_locale": "en",
@@ -11,7 +12,7 @@
   "name": "__MSG_gmailcheck_name__",
   "options_page": "options.html",
   "permissions": [
-    "tabs", "http://*.google.com/", "https://*.google.com/"
+    "tabs", "https://*.google.com/"
    ],
   "version": "3.1"
 }
