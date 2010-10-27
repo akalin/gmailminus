@@ -267,11 +267,13 @@ function animateFlip(unreadCount) {
         text: ""
       });
       chrome.browserAction.setIcon({path: "gmail_no_unread.png"});
+      chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
     } else {
       chrome.browserAction.setBadgeText({
         text: unreadCount.toString(10)
       });
       chrome.browserAction.setIcon({path: "gmail_unread.png"});
+	chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
     }
   }
 }
