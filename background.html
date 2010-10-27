@@ -130,6 +130,7 @@ function startRequest(index, unreadCounts, loadingAnimation) {
     function() {
       console.info("request for inbox " + index + " failed");
       if (loadingAnimation) loadingAnimation.stop();
+      updateUnreadCount(unreadCounts, -1, null, null);
       scheduleRequest(index, unreadCounts);
     }
   );
@@ -225,8 +226,13 @@ function calculateUnreadCount(unreadCounts, email_re) {
 }
 
 function updateUnreadCount(unreadCounts, index, email, count) {
-  var unreadCount = calculateUnreadCount(unreadCounts, /@gmail\.com$/);
-  animateFlip(unreadCount);
+  var email_re = /@gmail\.com$/;
+  var oldUnreadCount = calculateUnreadCount(unreadCounts, email_re);
+  if (index != -1) {
+    unreadCounts[index] = { "email": email, "count": count };
+  }
+  var unreadCount = calculateUnreadCount(unreadCounts, email_re);
+  if (oldUnreadCount != unreadCount) animateFlip(unreadCount);
 }
 
 
