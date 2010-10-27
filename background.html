@@ -219,10 +219,10 @@ function gmailNSResolver(prefix) {
 }
 
 function calculateUnreadCount(unreadCounts, email_re) {
-  var unreadCount = null;
+    if (unreadCounts.length <= 0) return null;
+  var unreadCount = 0;
   for (i in unreadCounts) {
     if (email_re.test(unreadCounts[i].email)) {
-      unreadCount = unreadCount || 0;
       unreadCount += unreadCounts[i].count;
     }
   }
