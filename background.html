@@ -5,7 +5,9 @@ var animationFrames = 36;
 var animationSpeed = 10; // ms
 var canvas;
 var canvasContext;
-var loggedInImage;
+var unknownImage;
+var noUnreadImage;
+var unreadImage;
 var pollIntervalMin = 1000 * 60;  // 1 minute
 var pollIntervalMax = 1000 * 60 * 60;  // 1 hour
 var requestFailureCounts = [];  // used for exponential backoff
@@ -86,11 +88,13 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
 
 function init() {
   canvas = document.getElementById('canvas');
-  loggedInImage = document.getElementById('logged_in');
+  unknownImage = document.getElementById('unknown');
+  noUnreadImage = document.getElementById('no_unread');
+  unreadImage = document.getElementById('unread');
   canvasContext = canvas.getContext('2d');
 
   chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
-  chrome.browserAction.setIcon({path: "gmail_logged_in.png"});
+  chrome.browserAction.setIcon({path: "gmail_unread.png"});
   loadingAnimation.start();
 
   for (i = 0; i < 3; ++i) {
@@ -213,7 +217,14 @@ function updateUnreadCount(index, email, count) {
   if (!unreadCounts[index] || unreadCounts[index].count != count) {
     console.info("Updating inbox " + index + ": " + email + ", " + count);
     unreadCounts[index] = { "email": email, "count": count };
-    animateFlip();
+    var unreadCount = 0;
+    var email_re = /@gmail\.com$/;
+    for (i in unreadCounts) {
+      if (email_re.test(unreadCounts[i].email)) {
+        unreadCount += unreadCounts[i].count;
+      }
+    }
+    animateFlip(unreadCount);
   }
 }
 
@@ -222,22 +233,15 @@ function ease(x) {
   return (1-Math.sin(Math.PI/2+x*Math.PI))/2;
 }
 
-function animateFlip() {
+function animateFlip(unreadCount) {
   rotation += 1/animationFrames;
-  drawIconAtRotation();
+  drawIconAtRotation(unreadCount);
 
   if (rotation <= 1) {
-    setTimeout("animateFlip()", animationSpeed);
+    setTimeout(function() { animateFlip(unreadCount) }, animationSpeed);
   } else {
     rotation = 0;
-    drawIconAtRotation();
-    var unreadCount = 0;
-    var email_re = /@gmail\.com$/;
-    for (i in unreadCounts) {
-      if (email_re.test(unreadCounts[i].email)) {
-        unreadCount += unreadCounts[i].count;
-      }
-    }
+    drawIconAtRotation(unreadCount);
     if (unreadCount == 0) {
       chrome.browserAction.setBadgeText({
         text: ""
@@ -247,19 +251,19 @@ function animateFlip() {
       chrome.browserAction.setBadgeText({
         text: unreadCount.toString(10)
       });
-      chrome.browserAction.setIcon({path: "gmail_logged_in.png"});
+      chrome.browserAction.setIcon({path: "gmail_unread.png"});
     }
   }
 }
 
-function drawIconAtRotation() {
+function drawIconAtRotation(unreadCount) {
   canvasContext.save();
   canvasContext.clearRect(0, 0, canvas.width, canvas.height);
   canvasContext.translate(
       Math.ceil(canvas.width/2),
       Math.ceil(canvas.height/2));
   canvasContext.rotate(2*Math.PI*ease(rotation));
-  canvasContext.drawImage(loggedInImage,
+    canvasContext.drawImage((unreadCount == 0) ? noUnreadImage : unreadImage,
       -Math.ceil(canvas.width/2),
       -Math.ceil(canvas.height/2));
   canvasContext.restore();
@@ -293,7 +297,9 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 </script>
 </head>
 <body onload="init()">
-<img id="logged_in" src="gmail_logged_in.png">
+<img id="unknown" src="gmail_unknown.png">
+<img id="no_unread" src="gmail_no_unread.png">
+<img id="unread" src="gmail_unread.png">
 <canvas id="canvas" width="19" height="19">
 </body>
 </html>
