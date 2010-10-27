@@ -13,7 +13,6 @@ var pollIntervalMax = 1000 * 60 * 60;  // 1 hour
 var requestFailureCounts = [];  // used for exponential backoff
 var requestTimeout = 1000 * 2;  // 5 seconds
 var rotation = 0;
-var unreadCounts = [];
 
 function getGmailUrl(index) {
   var url = "https://mail.google.com/mail/u/" + index + "/";
@@ -72,19 +71,6 @@ LoadingAnimation.prototype.stop = function() {
 }
 
 
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
-  if (changeInfo.url) {
-    index = getGmailUrlIndex(changeInfo.url);
-    if (index != -1) {
-      console.info("Detected tab for inbox " + index);
-      getInboxCount(index, function(email, count) {
-        updateUnreadCount(index, email, count);
-      });
-    }
-  }
-});
-
-
 function init() {
   canvas = document.getElementById('canvas');
   unknownImage = document.getElementById('unknown');
@@ -92,17 +78,31 @@ function init() {
   unreadImage = document.getElementById('unread');
   canvasContext = canvas.getContext('2d');
 
+  var unreadCounts = [];
+
+  chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
+    if (changeInfo.url) {
+      index = getGmailUrlIndex(changeInfo.url);
+      if (index != -1) {
+        console.info("Detected tab for inbox " + index);
+        getInboxCount(index, function(email, count) {
+          updateUnreadCount(unreadCounts, index, email, count);
+        });
+      }
+    }
+  });
+
   chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
   chrome.browserAction.setIcon({path: "gmail_unread.png"});
   var loadingAnimation = new LoadingAnimation();
   loadingAnimation.start();
 
   for (i = 0; i < 3; ++i) {
-    startRequest(i, loadingAnimation);
+    startRequest(i, unreadCounts, loadingAnimation);
   }
 }
 
-function scheduleRequest(index) {
+function scheduleRequest(index, unreadCounts) {
   var randomness = Math.random() * 2;
   requestFailureCount = requestFailureCounts[index] || 0;
   console.info("requestFailureCount = " + requestFailureCount);
@@ -113,24 +113,24 @@ function scheduleRequest(index) {
 
   console.info("scheduling request for inbox " + index +
 	       " at " + delay + " ms");
-  window.setTimeout(function() { startRequest(index, null); }, delay);
+  window.setTimeout(function() { startRequest(index, unreadCounts, null); }, delay);
 }
 
 // ajax stuff
-function startRequest(index, loadingAnimation) {
+function startRequest(index, unreadCounts, loadingAnimation) {
   console.info("starting request for inbox " + index);
   getInboxCount(index, 
     function(email, count) {
       console.info("request for inbox " + index + " succeeded with " +
 		   email + " and " + count);
       if (loadingAnimation) loadingAnimation.stop();
-      updateUnreadCount(index, email, count);
-      scheduleRequest(index);
+      updateUnreadCount(unreadCounts, index, email, count);
+      scheduleRequest(index, unreadCounts);
     },
     function() {
       console.info("request for inbox " + index + " failed");
       if (loadingAnimation) loadingAnimation.stop();
-      scheduleRequest(index);
+      scheduleRequest(index, unreadCounts);
     }
   );
 }
@@ -213,7 +213,7 @@ function gmailNSResolver(prefix) {
   }
 }
 
-function updateUnreadCount(index, email, count) {
+function updateUnreadCount(unreadCounts, index, email, count) {
   if (!unreadCounts[index] || unreadCounts[index].count != count) {
     console.info("Updating inbox " + index + ": " + email + ", " + count);
     unreadCounts[index] = { "email": email, "count": count };
