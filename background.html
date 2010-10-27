@@ -14,7 +14,6 @@ var requestFailureCounts = [];  // used for exponential backoff
 var requestTimeout = 1000 * 2;  // 5 seconds
 var rotation = 0;
 var unreadCounts = [];
-var loadingAnimation = new LoadingAnimation();
 
 function getGmailUrl(index) {
   var url = "https://mail.google.com/mail/u/" + index + "/";
@@ -95,10 +94,11 @@ function init() {
 
   chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
   chrome.browserAction.setIcon({path: "gmail_unread.png"});
+  var loadingAnimation = new LoadingAnimation();
   loadingAnimation.start();
 
   for (i = 0; i < 3; ++i) {
-    startRequest(i);
+    startRequest(i, loadingAnimation);
   }
 }
 
@@ -113,23 +113,23 @@ function scheduleRequest(index) {
 
   console.info("scheduling request for inbox " + index +
 	       " at " + delay + " ms");
-  window.setTimeout(function() { startRequest(index); }, delay);
+  window.setTimeout(function() { startRequest(index, null); }, delay);
 }
 
 // ajax stuff
-function startRequest(index) {
+function startRequest(index, loadingAnimation) {
   console.info("starting request for inbox " + index);
   getInboxCount(index, 
     function(email, count) {
       console.info("request for inbox " + index + " succeeded with " +
 		   email + " and " + count);
-      loadingAnimation.stop();
+      if (loadingAnimation) loadingAnimation.stop();
       updateUnreadCount(index, email, count);
       scheduleRequest(index);
     },
     function() {
       console.info("request for inbox " + index + " failed");
-      loadingAnimation.stop();
+      if (loadingAnimation) loadingAnimation.stop();
       scheduleRequest(index);
     }
   );
