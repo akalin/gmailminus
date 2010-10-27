@@ -11,7 +11,7 @@
   "name": "__MSG_gmailcheck_name__",
   "options_page": "options.html",
   "permissions": [
-    "tabs", "http://*.google.com/", "https://*.google.com/"
+    "tabs", "https://*.google.com/"
    ],
   "version": "3.1"
 }
