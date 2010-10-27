@@ -86,7 +86,7 @@ function init() {
       if (index != -1) {
         console.info("Detected tab for inbox " + index);
         getInboxCount(index, function(email, count) {
-          updateUnreadCount(unreadCounts, index, email, count);
+          updateUnreadCount(unreadCounts, null, index, email, count);
         });
       }
     }
@@ -124,13 +124,13 @@ function startRequest(index, unreadCounts, loadingAnimation) {
       console.info("request for inbox " + index + " succeeded with " +
 		   email + " and " + count);
       if (loadingAnimation) loadingAnimation.stop();
-      updateUnreadCount(unreadCounts, index, email, count);
+      updateUnreadCount(unreadCounts, loadingAnimation, index, email, count);
       scheduleRequest(index, unreadCounts);
     },
     function() {
       console.info("request for inbox " + index + " failed");
       if (loadingAnimation) loadingAnimation.stop();
-      updateUnreadCount(unreadCounts, -1, null, null);
+      updateUnreadCount(unreadCounts, loadingAnimation, index, null, null);
       scheduleRequest(index, unreadCounts);
     }
   );
@@ -225,14 +225,17 @@ function calculateUnreadCount(unreadCounts, email_re) {
   return unreadCount;
 }
 
-function updateUnreadCount(unreadCounts, index, email, count) {
+function updateUnreadCount(unreadCounts, loadingAnimation, index, email, count) {
   var email_re = /@gmail\.com$/;
   var oldUnreadCount = calculateUnreadCount(unreadCounts, email_re);
-  if (index != -1) {
+  if (email == null) {
+    delete unreadCounts[index];
+  } else {
     unreadCounts[index] = { "email": email, "count": count };
   }
   var unreadCount = calculateUnreadCount(unreadCounts, email_re);
-  if (oldUnreadCount != unreadCount) animateFlip(unreadCount);
+  if (loadingAnimation || oldUnreadCount != unreadCount)
+    animateFlip(unreadCount);
 }
 
 
