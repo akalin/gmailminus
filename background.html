@@ -213,19 +213,20 @@ function gmailNSResolver(prefix) {
   }
 }
 
-function updateUnreadCount(unreadCounts, index, email, count) {
-  if (!unreadCounts[index] || unreadCounts[index].count != count) {
-    console.info("Updating inbox " + index + ": " + email + ", " + count);
-    unreadCounts[index] = { "email": email, "count": count };
-    var unreadCount = 0;
-    var email_re = /@gmail\.com$/;
-    for (i in unreadCounts) {
-      if (email_re.test(unreadCounts[i].email)) {
-        unreadCount += unreadCounts[i].count;
-      }
+function calculateUnreadCount(unreadCounts, email_re) {
+  var unreadCount = null;
+  for (i in unreadCounts) {
+    if (email_re.test(unreadCounts[i].email)) {
+      unreadCount = unreadCount || 0;
+      unreadCount += unreadCounts[i].count;
     }
-    animateFlip(unreadCount);
   }
+  return unreadCount;
+}
+
+function updateUnreadCount(unreadCounts, index, email, count) {
+  var unreadCount = calculateUnreadCount(unreadCounts, /@gmail\.com$/);
+  animateFlip(unreadCount);
 }
 
 
@@ -242,7 +243,13 @@ function animateFlip(unreadCount) {
   } else {
     rotation = 0;
     drawIconAtRotation(unreadCount);
-    if (unreadCount == 0) {
+    if (unreadCount == null) {
+      chrome.browserAction.setBadgeText({
+        text: "?"
+      });
+      chrome.browserAction.setIcon({path:"gmail_unknown.png"});
+      chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]});
+    } else if (unreadCount == 0) {
       chrome.browserAction.setBadgeText({
         text: ""
       });
@@ -263,7 +270,15 @@ function drawIconAtRotation(unreadCount) {
       Math.ceil(canvas.width/2),
       Math.ceil(canvas.height/2));
   canvasContext.rotate(2*Math.PI*ease(rotation));
-    canvasContext.drawImage((unreadCount == 0) ? noUnreadImage : unreadImage,
+  var image;
+  if (unreadCount == null) {
+    image = unknownImage;
+  } else if (unread_count == 0) {
+    image = noUnreadImage;
+  } else {
+    image = unreadImage;
+  }
+  canvasContext.drawImage(image,
       -Math.ceil(canvas.width/2),
       -Math.ceil(canvas.height/2));
   canvasContext.restore();
