@@ -92,8 +92,12 @@ function init() {
     }
   });
 
-  chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
-  chrome.browserAction.setIcon({path: "gmail_unread.png"});
+  chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]})
+  chrome.browserAction.setIcon({path: "gmail_unknown.png"});
+  chrome.browserAction.setBadgeText({
+    text: "?"
+  });
+
   var loadingAnimation = new LoadingAnimation();
   loadingAnimation.start();
 
