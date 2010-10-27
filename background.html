@@ -238,10 +238,15 @@ function animateFlip() {
         unreadCount += unreadCounts[i].count;
       }
     }
-    chrome.browserAction.setBadgeText({
-	text: unreadCount.toString(10)
-    });
-    chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
+    if (unreadCount == 0) {
+      chrome.browserAction.setBadgeText({
+        text: ""
+      });
+    } else {
+      chrome.browserAction.setBadgeText({
+        text: unreadCount.toString(10)
+      });
+    }
   }
 }
 
