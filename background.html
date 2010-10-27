@@ -177,7 +177,7 @@ function getInboxCount(index, onSuccess, onError) {
             xmlDoc, gmailNSResolver, XPathResult.ANY_TYPE, null);
         var fullCountNode = fullCountSet.iterateNext();
         if (fullCountNode) {
-          fullCount = fullCountNode.textContent;
+          fullCount = parseInt(fullCountNode.textContent);
         } else {
           success = false;
         }
@@ -231,12 +231,15 @@ function animateFlip() {
   } else {
     rotation = 0;
     drawIconAtRotation();
-    unreadCountText = "";
+    var unreadCount = 0;
+    var email_re = /@gmail\.com$/;
     for (i in unreadCounts) {
-      unreadCountText += unreadCounts[i].count + ",";
+      if (email_re.test(unreadCounts[i].email)) {
+        unreadCount += unreadCounts[i].count;
+      }
     }
     chrome.browserAction.setBadgeText({
-      text: unreadCountText
+	text: unreadCount.toString(10)
     });
     chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
   }
