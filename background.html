@@ -1,5 +1,6 @@
 <html>
 <head>
+<script type="text/javascript" src="MailState.js"></script>
 <script>
 var animationFrames = 36;
 var animationSpeed = 10; // ms
@@ -10,7 +11,6 @@ var noUnreadImage;
 var unreadImage;
 var pollIntervalMin = 1000 * 60;  // 1 minute
 var pollIntervalMax = 1000 * 60 * 60;  // 1 hour
-var requestFailureCounts = [];  // used for exponential backoff
 var requestTimeout = 1000 * 2;  // 5 seconds
 var rotation = 0;
 
@@ -78,15 +78,19 @@ function init() {
   unreadImage = document.getElementById('unread');
   canvasContext = canvas.getContext('2d');
 
-  var unreadCounts = [];
+  var mail_states = [
+    new MailState(0),
+    new MailState(1),
+    new MailState(2),
+  ];
 
   chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
     if (changeInfo.url) {
       index = getGmailUrlIndex(changeInfo.url);
       if (index != -1) {
         console.info("Detected tab for inbox " + index);
-        getInboxCount(index, function(email, count) {
-          updateUnreadCount(unreadCounts, null, index, email, count);
+        getInboxCount(mail_states[index], function(email, count) {
+          updateUnreadCount(mail_states, null, index, email, count);
         });
       }
     }
@@ -102,60 +106,58 @@ function init() {
   loadingAnimation.start();
 
   for (i = 0; i < 3; ++i) {
-    startRequest(i, unreadCounts, loadingAnimation);
+    startRequest(i, mail_states, loadingAnimation);
   }
 }
 
-function scheduleRequest(index, unreadCounts) {
+function scheduleRequest(index, mail_states) {
   var randomness = Math.random() * 2;
-  requestFailureCount = requestFailureCounts[index] || 0;
-  console.info("requestFailureCount = " + requestFailureCount);
-  var exponent = Math.pow(2, requestFailureCount);
+  console.info("requestFailureCount = " + mail_states[index].request_failures);
+  var exponent = Math.pow(2, mail_states[index].request_failures);
   var delay = Math.min(randomness * pollIntervalMin * exponent,
                        pollIntervalMax);
   delay = Math.round(delay);
 
   console.info("scheduling request for inbox " + index +
 	       " at " + delay + " ms");
-  window.setTimeout(function() { startRequest(index, unreadCounts, null); }, delay);
+  window.setTimeout(function() { startRequest(index, mail_states, null); }, delay);
 }
 
 // ajax stuff
-function startRequest(index, unreadCounts, loadingAnimation) {
+function startRequest(index, mail_states, loadingAnimation) {
   console.info("starting request for inbox " + index);
-  getInboxCount(index, 
+  getInboxCount(mail_states[index],
     function(email, count) {
       console.info("request for inbox " + index + " succeeded with " +
 		   email + " and " + count);
       if (loadingAnimation) loadingAnimation.stop();
-      updateUnreadCount(unreadCounts, loadingAnimation, index, email, count);
-      scheduleRequest(index, unreadCounts);
+      updateUnreadCount(mail_states, loadingAnimation, index, email, count);
+      scheduleRequest(index, mail_states);
     },
     function() {
       console.info("request for inbox " + index + " failed");
       if (loadingAnimation) loadingAnimation.stop();
-      updateUnreadCount(unreadCounts, loadingAnimation, index, null, null);
-      scheduleRequest(index, unreadCounts);
+      updateUnreadCount(mail_states, loadingAnimation, index, null, null);
+      scheduleRequest(index, mail_states);
     }
   );
 }
 
-function getInboxCount(index, onSuccess, onError) {
+function getInboxCount(mail_state, onSuccess, onError) {
   var xhr = new XMLHttpRequest();
   var abortTimerId = window.setTimeout(function() {
     xhr.abort();  // synchronously calls onreadystatechange
   }, requestTimeout);
 
   function handleSuccess(email, count) {
-    requestFailureCounts[index] = 0;
+    mail_state.request_failures = 0;
     window.clearTimeout(abortTimerId);
     if (onSuccess)
       onSuccess(email, count);
   }
 
   function handleError() {
-    requestFailureCounts[index] = requestFailureCounts[index] || 0;
-    ++requestFailureCounts[index];
+    ++mail_state.request_failures;
     window.clearTimeout(abortTimerId);
     if (onError)
       onError();
@@ -204,7 +206,7 @@ function getInboxCount(index, onSuccess, onError) {
       handleError();
     }
 
-    xhr.open("GET", getFeedUrl(index), true);
+    xhr.open("GET", getFeedUrl(mail_state.index), true);
     xhr.send(null);
   } catch(e) {
     console.error(chrome.i18n.getMessage("gmailcheck_exception", e));
@@ -218,26 +220,29 @@ function gmailNSResolver(prefix) {
   }
 }
 
-function calculateUnreadCount(unreadCounts, email_re) {
+function calculateUnreadCount(mail_states, email_re) {
   var unreadCount = null;
-  for (i in unreadCounts) {
-    if (email_re.test(unreadCounts[i].email)) {
+  for (i in mail_states) {
+    if (email_re.test(mail_states[i].email)) {
       unreadCount = unreadCount || 0;
-      unreadCount += unreadCounts[i].count;
+      unreadCount += mail_states[i].count;
     }
   }
   return unreadCount;
 }
 
-function updateUnreadCount(unreadCounts, loadingAnimation, index, email, count) {
+function updateUnreadCount(mail_states, loadingAnimation, index, email, count) {
   var email_re = /@gmail\.com$/;
-  var oldUnreadCount = calculateUnreadCount(unreadCounts, email_re);
+  var oldUnreadCount = calculateUnreadCount(mail_states, email_re);
   if (email == null) {
-    delete unreadCounts[index];
+    mail_states[index].email = null;
+    mail_states[index].count = null;
   } else {
-    unreadCounts[index] = { "email": email, "count": count };
+    mail_states[index].email = email;
+    mail_states[index].count = count;
   }
-  var unreadCount = calculateUnreadCount(unreadCounts, email_re);
+  var unreadCount = calculateUnreadCount(mail_states, email_re);
+  console.info("old=" + oldUnreadCount + ", new=" + unreadCount);
   if (loadingAnimation || oldUnreadCount != unreadCount)
     animateFlip(unreadCount);
 }
