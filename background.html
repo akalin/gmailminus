@@ -89,7 +89,7 @@ function init() {
       index = getGmailUrlIndex(changeInfo.url);
       if (index != -1) {
         console.info("Detected tab for inbox " + index);
-        getInboxCount(mail_states[index], function(email, count) {
+        getInboxCount(getFeedUrl(index), function(email, count) {
           updateUnreadCount(mail_states, null, index, email, count);
         });
       }
@@ -126,7 +126,7 @@ function scheduleRequest(index, mail_states) {
 // ajax stuff
 function startRequest(index, mail_states, loadingAnimation) {
   console.info("starting request for inbox " + index);
-  getInboxCount(mail_states[index],
+  getInboxCount(getFeedUrl(index),
     function(email, count) {
       console.info("request for inbox " + index + " succeeded with " +
 		   email + " and " + count);
@@ -143,7 +143,7 @@ function startRequest(index, mail_states, loadingAnimation) {
   );
 }
 
-function getInboxCount(mail_state, onSuccess, onError) {
+function getInboxCount(feed_url, onSuccess, onError) {
   var xhr = new XMLHttpRequest();
   var abortTimerId = window.setTimeout(function() {
     xhr.abort();  // synchronously calls onreadystatechange
@@ -204,7 +204,7 @@ function getInboxCount(mail_state, onSuccess, onError) {
       handleError();
     }
 
-    xhr.open("GET", getFeedUrl(mail_state.index), true);
+    xhr.open("GET", feed_url, true);
     xhr.send(null);
   } catch(e) {
     console.error(chrome.i18n.getMessage("gmailcheck_exception", e));
