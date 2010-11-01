@@ -5,14 +5,17 @@ MailState.prototype.update = function(email, count) {
   this.request_failures = 0;
 }
 
-MailState.prototype.clear = function() {
+MailState.prototype.fail = function() {
   this.email = null;
   this.mail_count = null;
   this.last_updated = null;
-  this.request_failures = 0;
+  ++this.request_failures;
 }
 
 function MailState(index) {
   this.index = index;
-  this.clear();
+  this.email = null;
+  this.mail_count = null;
+  this.last_updated = null;
+  this.request_failures = 0;
 }

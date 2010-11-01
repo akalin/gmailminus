@@ -150,14 +150,12 @@ function getInboxCount(mail_state, onSuccess, onError) {
   }, requestTimeout);
 
   function handleSuccess(email, count) {
-    mail_state.request_failures = 0;
     window.clearTimeout(abortTimerId);
     if (onSuccess)
       onSuccess(email, count);
   }
 
   function handleError() {
-    ++mail_state.request_failures;
     window.clearTimeout(abortTimerId);
     if (onError)
       onError();
@@ -235,7 +233,7 @@ function updateUnreadCount(mail_states, loadingAnimation, index, email, count) {
   var email_re = /@gmail\.com$/;
   var oldUnreadCount = calculateUnreadCount(mail_states, email_re);
   if (email == null) {
-    mail_states[index].clear();
+    mail_states[index].fail();
   } else {
     mail_states[index].update(email, count);
   }
