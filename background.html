@@ -235,8 +235,7 @@ function updateUnreadCount(mail_states, loadingAnimation, index, email, count) {
   var email_re = /@gmail\.com$/;
   var oldUnreadCount = calculateUnreadCount(mail_states, email_re);
   if (email == null) {
-    mail_states[index].email = null;
-    mail_states[index].count = null;
+    mail_states[index].clear();
   } else {
     mail_states[index].email = email;
     mail_states[index].count = count;
