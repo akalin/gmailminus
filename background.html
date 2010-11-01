@@ -14,15 +14,6 @@ var pollIntervalMax = 1000 * 60 * 60;  // 1 hour
 var requestTimeout = 1000 * 2;  // 5 seconds
 var rotation = 0;
 
-function getGmailUrl(index) {
-  var url = "https://mail.google.com/mail/u/" + index + "/";
-  return url;
-}
-
-function getFeedUrl(index) {
-  return getGmailUrl(index) + "feed/atom";
-}
-
 function getGmailUrlIndex(url) {
   var match = /^https:\/\/mail.google.com\/mail\/u\/([012])/.exec(url);
   return match ? match[1] : -1;
@@ -89,7 +80,7 @@ function init() {
       index = getGmailUrlIndex(changeInfo.url);
       if (index != -1) {
         console.info("Detected tab for inbox " + index);
-        getInboxCount(getFeedUrl(index), function(email, count) {
+        getInboxCount(mail_states[index].get_feed_url(), function(email, count) {
           updateUnreadCount(mail_states, null, index, email, count);
         });
       }
@@ -126,7 +117,7 @@ function scheduleRequest(index, mail_states) {
 // ajax stuff
 function startRequest(index, mail_states, loadingAnimation) {
   console.info("starting request for inbox " + index);
-  getInboxCount(getFeedUrl(index),
+  getInboxCount(mail_states[index].get_feed_url(),
     function(email, count) {
       console.info("request for inbox " + index + " succeeded with " +
 		   email + " and " + count);
@@ -316,7 +307,7 @@ function goToInbox() {
       }
     }
     console.info("Going to default inbox");
-    chrome.tabs.create({url: getGmailUrl(0)});
+    chrome.tabs.create({url: (new MailState(0)).get_gmail_url()});
   });
 }
 

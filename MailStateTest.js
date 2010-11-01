@@ -8,6 +8,14 @@ describe('MailState', function () {
     expect(mail_state.request_failures).toEqual(0);
   });
 
+  it('urls', function() {
+    var mail_state = new MailState(2);
+    expect(mail_state.get_gmail_url()).toEqual(
+      "https://mail.google.com/mail/u/2/");
+    expect(mail_state.get_feed_url()).toEqual(
+      "https://mail.google.com/mail/u/2/feed/atom/");
+  });
+
   it('failed state', function() {
     var mail_state = new MailState(1);
 
