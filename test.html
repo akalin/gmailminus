@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gmail Mail Checker Minus Test Runner</title>
+  <link rel="stylesheet" type="text/css" href="jasmine/lib/jasmine.css">
+  <script type="text/javascript" src="jasmine/lib/jasmine.js"></script>
+  <script type="text/javascript" src="jasmine/lib/jasmine-html.js"></script>
+
+  <!-- include source files here... -->
+  <script type="text/javascript" src="MailState.js"></script>
+
+  <!-- include spec files here... -->
+  <script type="text/javascript" src="MailStateTest.js"></script>
+
+</head>
+<body>
+<script type="text/javascript">
+  jasmine.getEnv().addReporter(new jasmine.TrivialReporter());
+  jasmine.getEnv().execute();
+</script>
+</body>
+</html>
