@@ -80,8 +80,8 @@ function init() {
       index = getGmailUrlIndex(changeInfo.url);
       if (index != -1) {
         console.info("Detected tab for inbox " + index);
-        getInboxCount(mail_states[index].get_feed_url(), function(email, count) {
-          updateUnreadCount(mail_states, null, index, email, count);
+        getInboxCount(mail_states[index].get_feed_url(), function(xml) {
+          updateUnreadCount(mail_states, null, index, xml);
         });
       }
     }
@@ -118,94 +118,42 @@ function scheduleRequest(index, mail_states) {
 function startRequest(index, mail_states, loadingAnimation) {
   console.info("starting request for inbox " + index);
   getInboxCount(mail_states[index].get_feed_url(),
-    function(email, count) {
-      console.info("request for inbox " + index + " succeeded with " +
-		   email + " and " + count);
+    function(xml) {
       if (loadingAnimation) loadingAnimation.stop();
-      updateUnreadCount(mail_states, loadingAnimation, index, email, count);
-      scheduleRequest(index, mail_states);
-    },
-    function() {
-      console.info("request for inbox " + index + " failed");
-      if (loadingAnimation) loadingAnimation.stop();
-      updateUnreadCount(mail_states, loadingAnimation, index, null, null);
+      updateUnreadCount(mail_states, loadingAnimation, index, xml);
       scheduleRequest(index, mail_states);
     }
   );
 }
 
-function getInboxCount(feed_url, onSuccess, onError) {
+function getInboxCount(feed_url, handler) {
   var xhr = new XMLHttpRequest();
   var abortTimerId = window.setTimeout(function() {
     xhr.abort();  // synchronously calls onreadystatechange
   }, requestTimeout);
 
-  function handleSuccess(email, count) {
+  function runHandler(xml) {
     window.clearTimeout(abortTimerId);
-    if (onSuccess)
-      onSuccess(email, count);
-  }
-
-  function handleError() {
-    window.clearTimeout(abortTimerId);
-    if (onError)
-      onError();
+    handler(xml);
   }
 
   try {
-    xhr.onreadystatechange = function(){
+    xhr.onreadystatechange = function() {
       if (xhr.readyState != 4)
         return;
 
-      var success = false;
-      var email, fullCount;
-      if (xhr.responseXML) {
-        success = true;
-        var xmlDoc = xhr.responseXML;
-        var titleSet = xmlDoc.evaluate("/gmail:feed/gmail:title",
-            xmlDoc, gmailNSResolver, XPathResult.ANY_TYPE, null);
-        var titleNode = titleSet.iterateNext();
-        if (titleNode) {
-          title = titleNode.textContent;
-          var match = /^Gmail - Inbox for (\S+)$/.exec(title);
-          email = match[1];
-        } else {
-          success = false;
-        }
-
-        var fullCountSet = xmlDoc.evaluate("/gmail:feed/gmail:fullcount",
-            xmlDoc, gmailNSResolver, XPathResult.ANY_TYPE, null);
-        var fullCountNode = fullCountSet.iterateNext();
-        if (fullCountNode) {
-          fullCount = parseInt(fullCountNode.textContent);
-        } else {
-          success = false;
-        }
-      }
-
-      if (success) {
-        handleSuccess(email, fullCount);
-      } else {
-        console.error(chrome.i18n.getMessage("gmailcheck_node_error"));
-        handleError();
-      }
+      runHandler(xhr.responseXML);
     }
 
     xhr.onerror = function(error) {
-      handleError();
+      runHandler(null);
     }
 
     xhr.open("GET", feed_url, true);
     xhr.send(null);
   } catch(e) {
     console.error(chrome.i18n.getMessage("gmailcheck_exception", e));
-    handleError();
-  }
-}
-
-function gmailNSResolver(prefix) {
-  if(prefix == 'gmail') {
-    return 'http://purl.org/atom/ns#';
+    runHandler(null);
   }
 }
 
@@ -214,20 +162,16 @@ function calculateUnreadCount(mail_states, email_re) {
   for (i in mail_states) {
     if (email_re.test(mail_states[i].email)) {
       unreadCount = unreadCount || 0;
-      unreadCount += mail_states[i].count;
+      unreadCount += mail_states[i].mail_count;
     }
   }
   return unreadCount;
 }
 
-function updateUnreadCount(mail_states, loadingAnimation, index, email, count) {
+function updateUnreadCount(mail_states, loadingAnimation, index, xml) {
   var email_re = /@gmail\.com$/;
   var oldUnreadCount = calculateUnreadCount(mail_states, email_re);
-  if (email == null) {
-    mail_states[index].fail();
-  } else {
-    mail_states[index].update(email, count);
-  }
+  mail_states[index].parse_feed(xml);
   var unreadCount = calculateUnreadCount(mail_states, email_re);
   console.info("old=" + oldUnreadCount + ", new=" + unreadCount);
   if (loadingAnimation || oldUnreadCount != unreadCount)

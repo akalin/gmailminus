@@ -20,6 +20,40 @@ MailState.prototype.fail = function() {
   ++this.request_failures;
 }
 
+function gmailNSResolver(prefix) {
+  if(prefix == 'gmail') {
+    return 'http://purl.org/atom/ns#';
+  }
+}
+
+MailState.prototype.parse_feed = function(xml) {
+  if (!xml) {
+    this.fail();
+    return;
+  }
+  var titleSet = xml.evaluate("/gmail:feed/gmail:title",
+      xml, gmailNSResolver, XPathResult.ANY_TYPE, null);
+  var titleNode = titleSet.iterateNext();
+  if (!titleNode) {
+    this.fail();
+    return;
+  }
+  title = titleNode.textContent;
+  var match = /^Gmail - Inbox for (\S+)$/.exec(title);
+  email = match[1];
+
+  var fullCountSet = xml.evaluate("/gmail:feed/gmail:fullcount",
+      xml, gmailNSResolver, XPathResult.ANY_TYPE, null);
+  var fullCountNode = fullCountSet.iterateNext();
+  if (!fullCountNode) {
+    this.fail();
+    return;
+  }
+  fullCount = parseInt(fullCountNode.textContent);
+  this.update(email, fullCount);
+}
+
+
 function MailState(index) {
   this.index = index;
   this.email = null;
