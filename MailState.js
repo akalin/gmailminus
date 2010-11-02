@@ -53,7 +53,6 @@ MailState.prototype.parse_feed = function(xml) {
   this.update(email, fullCount);
 }
 
-
 function MailState(index) {
   this.index = index;
   this.email = null;
