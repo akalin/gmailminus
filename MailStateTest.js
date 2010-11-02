@@ -64,4 +64,19 @@ describe('MailState', function () {
     expect(mail_state.last_updated).toEqual(null);
     expect(mail_state.request_failures).toEqual(0);
   });
+
+  it('parse feed failure', function() {
+    var mail_state = new MailState(1);
+    var xml_text = '
+<feed xmlns="http://purl.org/atom/ns#" version="0.3">
+</feed>
+';
+    var xml = (new DOMParser()).parseFromString(xml_text, "text/xml");
+    mail_state.parse_feed(xml);
+    expect(mail_state.index).toEqual(1);
+    expect(mail_state.email).toEqual(null);
+    expect(mail_state.mail_count).toEqual(100);
+    expect(mail_state.last_updated).toEqual(null);
+    expect(mail_state.request_failures).toEqual(0);
+  });
 });
