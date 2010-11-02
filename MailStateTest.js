@@ -47,15 +47,14 @@ describe('MailState', function () {
 
   it('parse feed', function() {
     var mail_state = new MailState(1);
-    var xml_text = '
-<feed xmlns="http://purl.org/atom/ns#" version="0.3">
-<title>Gmail - Inbox for test@foo.com</title>
-<tagline>New messages in your Gmail Inbox</tagline>
-<fullcount>533</fullcount>
-<link rel="alternate" href="http://mail.google.com/mail/u/0" type="text/html"/>
-<modified>2010-11-02T03:35:17Z</modified>
-</feed>
-';
+    var xml_text =
+'<feed xmlns="http://purl.org/atom/ns#" version="0.3">' +
+'<title>Gmail - Inbox for test@foo.com</title>' +
+'<tagline>New messages in your Gmail Inbox</tagline>' +
+'<fullcount>533</fullcount>' +
+'<link rel="alternate" href="http://mail.google.com/mail/u/0" type="text/html"/>' +
+'<modified>2010-11-02T03:35:17Z</modified>' +
+'</feed>';
     var xml = (new DOMParser()).parseFromString(xml_text, "text/xml");
     mail_state.parse_feed(xml);
     expect(mail_state.index).toEqual(1);
@@ -67,16 +66,15 @@ describe('MailState', function () {
 
   it('parse feed failure', function() {
     var mail_state = new MailState(1);
-    var xml_text = '
-<feed xmlns="http://purl.org/atom/ns#" version="0.3">
-</feed>
-';
+    var xml_text =
+'<feed xmlns="http://purl.org/atom/ns#" version="0.3">' +
+'</feed>';
     var xml = (new DOMParser()).parseFromString(xml_text, "text/xml");
     mail_state.parse_feed(xml);
     expect(mail_state.index).toEqual(1);
     expect(mail_state.email).toEqual(null);
-    expect(mail_state.mail_count).toEqual(100);
+    expect(mail_state.mail_count).toEqual(null);
     expect(mail_state.last_updated).toEqual(null);
-    expect(mail_state.request_failures).toEqual(0);
+    expect(mail_state.request_failures).toEqual(1);
   });
 });
