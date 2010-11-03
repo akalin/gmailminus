@@ -23,7 +23,7 @@ GmailAccountChecker.prototype.startCheck = function() {
 
   var onSuccess = function() {
     window.clearTimeout(abortTimerId);
-    self.parse_feed(xhr.responseXML);
+    self.parseFeed_(xhr.responseXML);
     self.schedule();
   }
 
@@ -58,7 +58,7 @@ GmailAccountChecker.prototype.getBaseUrl = function() {
   return "https://mail.google.com/mail/u/" + this.index + "/";
 }
 
-GmailAccountChecker.prototype.parse_feed = function(xml) {
+GmailAccountChecker.prototype.parseFeed_ = function(xml) {
   var gmailNSResolver = function(prefix) {
     if(prefix == 'gmail') {
       return 'http://purl.org/atom/ns#';
