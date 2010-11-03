@@ -11,11 +11,6 @@ var noUnreadImage;
 var unreadImage;
 var rotation = 0;
 
-function getGmailUrlIndex(url) {
-  var match = /^https:\/\/mail.google.com\/mail\/u\/([012])/.exec(url);
-  return match ? match[1] : -1;
-}
-
 // A "loading" animation displayed while we wait for the first response from
 // Gmail. This animates the badge text with a dot that cycles from left to
 // right.
@@ -58,6 +53,10 @@ LoadingAnimation.prototype.stop = function() {
   this.timerId_ = 0;
 }
 
+function getGmailUrlIndex(url) {
+  var match = /^https:\/\/mail.google.com\/mail\/u\/([012])/.exec(url);
+  return match ? match[1] : -1;
+}
 
 function init() {
   canvas = document.getElementById('canvas');
