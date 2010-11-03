@@ -27,6 +27,25 @@ GmailChecker.prototype.onTabUpdated = function(url) {
   }
 }
 
+GmailChecker.prototype.getTooltip = function() {
+  var tooltip = '';
+  var accountChecker;
+  for (var i = 0; i < MAX_ACCOUNTS; ++i) {
+    accountChecker = this.accountCheckers_[i];
+    var email = accountChecker.email;
+    tooltip += i + '. ';
+    if (email) {
+      tooltip += email +
+	         (this.emailRegexp_.test(email) ? '*' : '') +
+	         ': ' + accountChecker.unreadCount;
+    } else {
+      tooltip += '?: ?';
+    }
+    if (i < MAX_ACCOUNTS - 1) tooltip += '\n';
+  }
+  return tooltip;
+}
+
 GmailChecker.prototype.findInboxTab = function(tabs) {
   for (var i = 0; i < tabs.length; ++i) {
     if (tabs[i].url) {

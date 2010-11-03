@@ -107,7 +107,7 @@ GmailAccountChecker.prototype.parseFeed_ = function(xml) {
     return;
   }
 
-  console.info('updating ' + this.index + ' to ' + email + ':' + fullCount);
+  console.info('updating ' + this.index + ' to ' + email + ': ' + fullCount);
 
   this.requestFailures_ = 0;
   this.email = email;

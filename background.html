@@ -12,7 +12,7 @@ function init() {
   });
 
   var handler = function() {
-    updateBadge(checker.unreadCount);
+    updateBadge(checker.unreadCount, checker.getTooltip());
   };
   var checker = new GmailChecker(/@gmail\.com$/, handler);
 
@@ -35,7 +35,7 @@ function init() {
   });
 }
 
-function updateBadge(unreadCount) {
+function updateBadge(unreadCount, tooltip) {
   if (unreadCount == null) {
     chrome.browserAction.setBadgeText({
       text: "?"
@@ -55,6 +55,7 @@ function updateBadge(unreadCount) {
     chrome.browserAction.setIcon({path: "gmail_unread.png"});
     chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
   }
+  chrome.browserAction.setTitle({title: tooltip});
 }
 </script>
 </head>
