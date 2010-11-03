@@ -1,12 +1,13 @@
 function GmailAccountChecker(index, onUpdate) {
   this.onUpdate_ = onUpdate;
-  this.lastUpdated_ = null;
   this.requestFailures_ = 0;
   this.pendingRequestTimerId_ = null;
 
   this.index = index;
   this.email = null;
   this.unreadCount = null;
+  this.lastUpdateTime = null;
+  this.lastError = null;
 
   this.startCheck();
 }
@@ -92,10 +93,11 @@ GmailAccountChecker.prototype.parseFeed_ = function(xml) {
     return;
   }
 
+  this.requestFailures_ = 0;
   this.email = email;
   this.unreadCount = fullCount;
-  this.lastUpdated_ = new Date();
-  this.requestFailures_ = 0;
+  this.lastUpdateTime = new Date();
+  this.lastError = null;
   this.onUpdate_();
 }
 
@@ -117,10 +119,10 @@ GmailAccountChecker.prototype.scheduleNextCheck_ = function() {
 }
 
 GmailAccountChecker.prototype.onError_ = function(error) {
-  console.error(error);
+  ++this.requestFailures_;
   this.email = null;
   this.unreadCount = null;
-  this.lastUpdated_ = new Date();
-  ++this.requestFailures_;
+  this.lastUpdateTime = new Date();
+  this.lastError = error;
   this.onUpdate_();
 }
