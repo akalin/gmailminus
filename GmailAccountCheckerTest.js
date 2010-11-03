@@ -24,12 +24,12 @@ describe('GmailAccountChecker', function () {
   });
 
   it('basic flow', function() {
-    var checker = new GmailAccountChecker(2, callbackSpy);
-    expect(checker.index).toEqual(2);
-    expect(checker.email).toEqual(null);
-    expect(checker.unreadCount).toEqual(null);
-    expect(checker.lastUpdateTime).toEqual(null);
-    expect(checker.lastError).toEqual(null);
+    var accountChecker = new GmailAccountChecker(2, callbackSpy);
+    expect(accountChecker.index).toEqual(2);
+    expect(accountChecker.email).toEqual(null);
+    expect(accountChecker.unreadCount).toEqual(null);
+    expect(accountChecker.lastUpdateTime).toEqual(null);
+    expect(accountChecker.lastError).toEqual(null);
 
     expect(GmailAccountChecker.setTimeout_).toHaveBeenCalled();
     expect(GmailAccountChecker.makeXMLHttpRequest_).toHaveBeenCalled();
@@ -52,11 +52,11 @@ describe('GmailAccountChecker', function () {
     fakeReq.responseXML = xml;
     fakeReq.onload();
 
-    expect(checker.index).toEqual(2);
-    expect(checker.email).toEqual('foo@bar.com');
-    expect(checker.unreadCount).toEqual(300);
-    expect(checker.lastUpdateTime).toNotEqual(null);
-    expect(checker.lastError).toEqual(null);
+    expect(accountChecker.index).toEqual(2);
+    expect(accountChecker.email).toEqual('foo@bar.com');
+    expect(accountChecker.unreadCount).toEqual(300);
+    expect(accountChecker.lastUpdateTime).toNotEqual(null);
+    expect(accountChecker.lastError).toEqual(null);
 
     expect(callbackSpy).toHaveBeenCalled();
     expect(GmailAccountChecker.clearTimeout_).toHaveBeenCalled();
@@ -64,12 +64,12 @@ describe('GmailAccountChecker', function () {
   });
 
   it('parse error', function() {
-    var checker = new GmailAccountChecker(1, callbackSpy);
-    expect(checker.index).toEqual(1);
-    expect(checker.email).toEqual(null);
-    expect(checker.unreadCount).toEqual(null);
-    expect(checker.lastUpdateTime).toEqual(null);
-    expect(checker.lastError).toEqual(null);
+    var accountChecker = new GmailAccountChecker(1, callbackSpy);
+    expect(accountChecker.index).toEqual(1);
+    expect(accountChecker.email).toEqual(null);
+    expect(accountChecker.unreadCount).toEqual(null);
+    expect(accountChecker.lastUpdateTime).toEqual(null);
+    expect(accountChecker.lastError).toEqual(null);
 
     expect(GmailAccountChecker.setTimeout_).toHaveBeenCalled();
     expect(GmailAccountChecker.makeXMLHttpRequest_).toHaveBeenCalled();
@@ -85,11 +85,11 @@ describe('GmailAccountChecker', function () {
     var xml = stringToXml(xml_text);
     fakeReq.responseXML = xml;
     fakeReq.onload();
-    expect(checker.index).toEqual(1);
-    expect(checker.email).toEqual(null);
-    expect(checker.unreadCount).toEqual(null);
-    expect(checker.lastUpdateTime).toNotEqual(null);
-    expect(checker.lastError).toNotEqual(null);
+    expect(accountChecker.index).toEqual(1);
+    expect(accountChecker.email).toEqual(null);
+    expect(accountChecker.unreadCount).toEqual(null);
+    expect(accountChecker.lastUpdateTime).toNotEqual(null);
+    expect(accountChecker.lastError).toNotEqual(null);
 
     expect(callbackSpy).toHaveBeenCalled();
     expect(GmailAccountChecker.clearTimeout_).toHaveBeenCalled();
@@ -97,12 +97,12 @@ describe('GmailAccountChecker', function () {
   });
 
   it('request error', function() {
-    var checker = new GmailAccountChecker(1, callbackSpy);
-    expect(checker.index).toEqual(1);
-    expect(checker.email).toEqual(null);
-    expect(checker.unreadCount).toEqual(null);
-    expect(checker.lastUpdateTime).toEqual(null);
-    expect(checker.lastError).toEqual(null);
+    var accountChecker = new GmailAccountChecker(1, callbackSpy);
+    expect(accountChecker.index).toEqual(1);
+    expect(accountChecker.email).toEqual(null);
+    expect(accountChecker.unreadCount).toEqual(null);
+    expect(accountChecker.lastUpdateTime).toEqual(null);
+    expect(accountChecker.lastError).toEqual(null);
 
     expect(GmailAccountChecker.setTimeout_).toHaveBeenCalled();
     expect(GmailAccountChecker.makeXMLHttpRequest_).toHaveBeenCalled();
@@ -113,11 +113,11 @@ describe('GmailAccountChecker', function () {
 
     fakeReq.status = 404;
     fakeReq.onload();
-    expect(checker.index).toEqual(1);
-    expect(checker.email).toEqual(null);
-    expect(checker.unreadCount).toEqual(null);
-    expect(checker.lastUpdateTime).toNotEqual(null);
-    expect(checker.lastError).toNotEqual(null);
+    expect(accountChecker.index).toEqual(1);
+    expect(accountChecker.email).toEqual(null);
+    expect(accountChecker.unreadCount).toEqual(null);
+    expect(accountChecker.lastUpdateTime).toNotEqual(null);
+    expect(accountChecker.lastError).toNotEqual(null);
 
     expect(callbackSpy).toHaveBeenCalled();
     expect(GmailAccountChecker.clearTimeout_).toHaveBeenCalled();
