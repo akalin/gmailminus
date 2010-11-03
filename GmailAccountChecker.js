@@ -16,7 +16,7 @@ GmailAccountChecker.prototype.startCheck = function() {
 
   var requestTimeout = 5 * 1000;  // 5 seconds
   var abortTimerId = window.setTimeout(function() {
-    req.abort();  // synchronously calls req.onreadystatechange
+    req.abort();
   }, requestTimeout);
 
   var self = this;
