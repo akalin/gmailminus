@@ -21,7 +21,11 @@ GmailAccountChecker.prototype.startCheck = function() {
   var self = this;
   function runHandler(xml) {
     window.clearTimeout(abortTimerId);
-    self.parse_feed(xml);
+    if (xml) {
+      self.parse_feed(xml);
+    } else {
+      self.fail();
+    }
     if (this.pendingRequestTimerId_) {
       window.clearTimeout(pendingRequestTimerId);
     }
@@ -74,10 +78,6 @@ function gmailNSResolver(prefix) {
 }
 
 GmailAccountChecker.prototype.parse_feed = function(xml) {
-  if (!xml) {
-    this.fail();
-    return;
-  }
   var titleSet = xml.evaluate("/gmail:feed/gmail:title",
       xml, gmailNSResolver, XPathResult.ANY_TYPE, null);
   var titleNode = titleSet.iterateNext();
