@@ -64,8 +64,9 @@ MailState.prototype.schedule = function() {
                        pollIntervalMax);
   delay = Math.round(delay);
 
+  var self = this;
   this.pending_request =
-    window.setTimeout(function() { this.get_inbox_count(); }, delay);
+    window.setTimeout(function() { self.get_inbox_count(); }, delay);
 }
 
 MailState.prototype.get_inbox_count = function() {
