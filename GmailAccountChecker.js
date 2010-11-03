@@ -57,7 +57,7 @@ GmailAccountChecker.prototype.startCheck = function() {
 
   var feedUrl = this.getBaseUrl() + 'feed/atom/';
 
-  console.info('starting request for ' + feedUrl);
+  console.info('starting request for ' + this.index);
 
   try {
     req.open('GET', feedUrl, true);
@@ -130,6 +130,8 @@ GmailAccountChecker.prototype.scheduleNextCheck_ = function() {
   var self = this;
   this.pendingRequestTimerId_ =
     GmailAccountChecker.setTimeout_(function() { self.startCheck(); }, delay);
+  console.info('scheduling next check for ' + this.index + ' for ' +
+	       delay/1000.0 + 's');
 }
 
 GmailAccountChecker.prototype.onError_ = function(error) {
