@@ -11,6 +11,38 @@ function GmailAccountChecker(index, onUpdate) {
   this.startCheck();
 }
 
+GmailAccountChecker.prototype.startCheck = function() {
+  var xhr = new XMLHttpRequest();
+  var requestTimeout = 1000 * 2;  // 5 seconds
+  var abortTimerId = window.setTimeout(function() {
+    xhr.abort();  // synchronously calls onreadystatechange
+  }, requestTimeout);
+
+  var self = this;
+  function runHandler(xml) {
+    window.clearTimeout(abortTimerId);
+    self.parse_feed(xml);
+    if (this.pendingRequestTimerId_) {
+      window.clearTimeout(pendingRequestTimerId);
+    }
+    self.schedule();
+  }
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState != 4)
+      return;
+
+    runHandler(xhr.responseXML);
+  }
+
+  xhr.onerror = function(error) {
+    runHandler(null);
+  }
+
+  xhr.open("GET", this.get_feed_url(), true);
+  xhr.send(null);
+}
+
 GmailAccountChecker.prototype.get_gmail_url = function() {
   return "https://mail.google.com/mail/u/" + this.index + "/";
 }
@@ -82,39 +114,3 @@ GmailAccountChecker.prototype.schedule = function() {
     window.setTimeout(function() { self.startCheck(); }, delay);
 }
 
-GmailAccountChecker.prototype.startCheck = function() {
-  var xhr = new XMLHttpRequest();
-  var requestTimeout = 1000 * 2;  // 5 seconds
-  var abortTimerId = window.setTimeout(function() {
-    xhr.abort();  // synchronously calls onreadystatechange
-  }, requestTimeout);
-
-  var self = this;
-  function runHandler(xml) {
-    window.clearTimeout(abortTimerId);
-    self.parse_feed(xml);
-    if (this.pendingRequestTimerId_) {
-      window.clearTimeout(pendingRequestTimerId);
-    }
-    self.schedule();
-  }
-
-  try {
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState != 4)
-        return;
-
-      runHandler(xhr.responseXML);
-    }
-
-    xhr.onerror = function(error) {
-      runHandler(null);
-    }
-
-    xhr.open("GET", this.get_feed_url(), true);
-    xhr.send(null);
-  } catch(e) {
-    console.error(e);
-    runHandler(null);
-  }
-}
