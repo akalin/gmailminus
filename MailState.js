@@ -64,7 +64,8 @@ MailState.prototype.schedule = function() {
                        pollIntervalMax);
   delay = Math.round(delay);
 
-  window.setTimeout(function() { this.get_inbox_count(); }, delay);
+  this.pending_request =
+    window.setTimeout(function() { this.get_inbox_count(); }, delay);
 }
 
 MailState.prototype.get_inbox_count = function() {
@@ -78,6 +79,10 @@ MailState.prototype.get_inbox_count = function() {
   function runHandler(xml) {
     window.clearTimeout(abortTimerId);
     self.parse_feed(xml);
+    if (this.pending_request) {
+      window.clearTimeout(pending_request);
+    }
+    self.schedule();
   }
 
   try {
@@ -107,5 +112,6 @@ function MailState(index, on_change) {
   this.mail_count = null;
   this.last_updated = null;
   this.request_failures = 0;
+  this.pending_request = null;
   this.get_inbox_count();
 }
