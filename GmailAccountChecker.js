@@ -13,10 +13,6 @@ function GmailAccountChecker(index, onUpdate) {
 
 GmailAccountChecker.prototype.startCheck = function() {
   var xhr = new XMLHttpRequest();
-  var requestTimeout = 1000 * 2;  // 5 seconds
-  var abortTimerId = window.setTimeout(function() {
-    xhr.abort();  // synchronously calls onreadystatechange
-  }, requestTimeout);
 
   var self = this;
   xhr.onreadystatechange = function() {
@@ -33,6 +29,11 @@ GmailAccountChecker.prototype.startCheck = function() {
     self.fail();
     self.schedule();
   }
+
+  var requestTimeout = 1000 * 2;  // 5 seconds
+  var abortTimerId = window.setTimeout(function() {
+    xhr.abort();  // synchronously calls onreadystatechange
+  }, requestTimeout);  // 5 seeconds
 
   try {
     xhr.open("GET", this.get_feed_url(), true);
