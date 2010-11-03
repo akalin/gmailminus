@@ -1,6 +1,6 @@
 <html>
 <head>
-<script type="text/javascript" src="MailState.js"></script>
+<script type="text/javascript" src="GmailAccountChecker.js"></script>
 <script>
 var animationFrames = 36;
 var animationSpeed = 10; // ms
@@ -67,20 +67,20 @@ function init() {
 
   var handler = function() {
     if (loadingAnimation) loadingAnimation.stop();
-    updateUnreadCount(mail_states);
+    updateUnreadCount(account_checkers);
   };
 
-  var mail_states = [
-    new MailState(0, handler),
-    new MailState(1, handler),
-    new MailState(2, handler),
+  var account_checkers = [
+    new GmailAccountChecker(0, handler),
+    new GmailAccountChecker(1, handler),
+    new GmailAccountChecker(2, handler),
   ];
 
   chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
     if (changeInfo.url) {
       index = getGmailUrlIndex(changeInfo.url);
       if (index != -1) {
-        mail_states[index].get_inbox_count();
+        account_checkers[index].get_inbox_count();
       }
     }
   });
@@ -95,20 +95,20 @@ function init() {
   loadingAnimation.start();
 }
 
-function calculateUnreadCount(mail_states, email_re) {
+function calculateUnreadCount(account_checkers, email_re) {
   var unreadCount = null;
-  for (i in mail_states) {
-    if (email_re.test(mail_states[i].email)) {
+  for (i in account_checkers) {
+    if (email_re.test(account_checkers[i].email)) {
       unreadCount = unreadCount || 0;
-      unreadCount += mail_states[i].mail_count;
+      unreadCount += account_checkers[i].mail_count;
     }
   }
   return unreadCount;
 }
 
-function updateUnreadCount(mail_states) {
+function updateUnreadCount(account_checkers) {
   var email_re = /@gmail\.com$/;
-  var unreadCount = calculateUnreadCount(mail_states, email_re);
+  var unreadCount = calculateUnreadCount(account_checkers, email_re);
   animateFlip(unreadCount);
 }
 
@@ -185,7 +185,7 @@ function goToInbox() {
       }
     }
     console.info("Going to default inbox");
-    chrome.tabs.create({url: (new MailState(0)).get_gmail_url()});
+    chrome.tabs.create({url: (new GmailAccountChecker(0)).get_gmail_url()});
   });
 }
 

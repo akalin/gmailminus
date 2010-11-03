@@ -1,12 +1,12 @@
-MailState.prototype.get_gmail_url = function() {
+GmailAccountChecker.prototype.get_gmail_url = function() {
   return "https://mail.google.com/mail/u/" + this.index + "/";
 }
 
-MailState.prototype.get_feed_url = function() {
+GmailAccountChecker.prototype.get_feed_url = function() {
   return this.get_gmail_url() + "feed/atom/";
 }
 
-MailState.prototype.update = function(email, count) {
+GmailAccountChecker.prototype.update = function(email, count) {
   this.email = email;
   this.mail_count = count;
   this.last_updated = null;
@@ -14,7 +14,7 @@ MailState.prototype.update = function(email, count) {
   this.on_change();
 }
 
-MailState.prototype.fail = function() {
+GmailAccountChecker.prototype.fail = function() {
   this.email = null;
   this.mail_count = null;
   this.last_updated = null;
@@ -28,7 +28,7 @@ function gmailNSResolver(prefix) {
   }
 }
 
-MailState.prototype.parse_feed = function(xml) {
+GmailAccountChecker.prototype.parse_feed = function(xml) {
   if (!xml) {
     this.fail();
     return;
@@ -55,7 +55,7 @@ MailState.prototype.parse_feed = function(xml) {
   this.update(email, fullCount);
 }
 
-MailState.prototype.schedule = function() {
+GmailAccountChecker.prototype.schedule = function() {
   var pollIntervalMin = 1000 * 60;  // 1 minute
   var pollIntervalMax = 1000 * 60 * 60;  // 1 hour
   var randomness = Math.random() * 2;
@@ -69,7 +69,7 @@ MailState.prototype.schedule = function() {
     window.setTimeout(function() { self.get_inbox_count(); }, delay);
 }
 
-MailState.prototype.get_inbox_count = function() {
+GmailAccountChecker.prototype.get_inbox_count = function() {
   var xhr = new XMLHttpRequest();
   var requestTimeout = 1000 * 2;  // 5 seconds
   var abortTimerId = window.setTimeout(function() {
@@ -106,7 +106,7 @@ MailState.prototype.get_inbox_count = function() {
   }
 }
 
-function MailState(index, on_change) {
+function GmailAccountChecker(index, on_change) {
   this.index = index;
   this.on_change = on_change;
   this.email = null;

@@ -1,6 +1,6 @@
-describe('MailState', function () {
+describe('GmailAccountChecker', function () {
   it('initial state', function() {
-    var mail_state = new MailState(0, function() {});
+    var mail_state = new GmailAccountChecker(0, function() {});
     expect(mail_state.index).toEqual(0);
     expect(mail_state.email).toEqual(null);
     expect(mail_state.mail_count).toEqual(null);
@@ -9,7 +9,7 @@ describe('MailState', function () {
   });
 
   it('urls', function() {
-    var mail_state = new MailState(2, function() {});
+    var mail_state = new GmailAccountChecker(2, function() {});
     expect(mail_state.get_gmail_url()).toEqual(
       "https://mail.google.com/mail/u/2/");
     expect(mail_state.get_feed_url()).toEqual(
@@ -17,7 +17,7 @@ describe('MailState', function () {
   });
 
   it('failed state', function() {
-    var mail_state = new MailState(1, function() {});
+    var mail_state = new GmailAccountChecker(1, function() {});
 
     mail_state.fail();
     expect(mail_state.index).toEqual(1);
@@ -35,7 +35,7 @@ describe('MailState', function () {
   });
 
   it('updated state', function() {
-    var mail_state = new MailState(2, function() {});
+    var mail_state = new GmailAccountChecker(2, function() {});
     mail_state.fail();
     mail_state.update('foo@bar.com', 5);
     expect(mail_state.index).toEqual(2);
@@ -46,7 +46,7 @@ describe('MailState', function () {
   });
 
   it('parse feed', function() {
-    var mail_state = new MailState(1, function() {});
+    var mail_state = new GmailAccountChecker(1, function() {});
     var xml_text =
 '<feed xmlns="http://purl.org/atom/ns#" version="0.3">' +
 '<title>Gmail - Inbox for test@foo.com</title>' +
@@ -65,7 +65,7 @@ describe('MailState', function () {
   });
 
   it('parse feed failure', function() {
-    var mail_state = new MailState(1, function() {});
+    var mail_state = new GmailAccountChecker(1, function() {});
     var xml_text =
 '<feed xmlns="http://purl.org/atom/ns#" version="0.3">' +
 '</feed>';
