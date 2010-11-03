@@ -26,9 +26,6 @@ GmailAccountChecker.prototype.startCheck = function() {
     } else {
       self.fail();
     }
-    if (this.pendingRequestTimerId_) {
-      window.clearTimeout(pendingRequestTimerId);
-    }
     self.schedule();
   }
 
@@ -101,6 +98,9 @@ GmailAccountChecker.prototype.parse_feed = function(xml) {
 }
 
 GmailAccountChecker.prototype.schedule = function() {
+  if (this.pendingRequestTimerId_) {
+    window.clearTimeout(pendingRequestTimerId);
+  }
   var pollIntervalMin = 1000 * 60;  // 1 minute
   var pollIntervalMax = 1000 * 60 * 60;  // 1 hour
   var randomness = Math.random() * 2;
