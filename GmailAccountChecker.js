@@ -57,6 +57,8 @@ GmailAccountChecker.prototype.startCheck = function() {
 
   var feedUrl = this.getBaseUrl() + 'feed/atom/';
 
+  console.info('starting request for ' + feedUrl);
+
   try {
     req.open('GET', feedUrl, true);
     req.send(null);
