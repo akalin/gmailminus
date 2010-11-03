@@ -44,7 +44,7 @@ describe('GmailAccountChecker', function () {
       'type="text/html"/>' +
       '<modified>2010-11-02T03:35:17Z</modified>' +
       '</feed>';
-    var xml = (new DOMParser()).parseFromString(xml_text, "text/xml");
+    var xml = (new DOMParser()).parseFromString(xml_text, 'text/xml');
     fakeReq.responseXML = xml;
     fakeReq.onload();
 
@@ -78,7 +78,7 @@ describe('GmailAccountChecker', function () {
     var xml_text =
       '<feed xmlns="http://purl.org/atom/ns#" version="0.3">' +
       '</feed>';
-    var xml = (new DOMParser()).parseFromString(xml_text, "text/xml");
+    var xml = (new DOMParser()).parseFromString(xml_text, 'text/xml');
     fakeReq.responseXML = xml;
     fakeReq.onload();
     expect(checker.index).toEqual(1);
