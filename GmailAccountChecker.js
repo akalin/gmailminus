@@ -27,29 +27,28 @@ GmailAccountChecker.prototype.startCheck = function() {
     self.schedule();
   }
 
-  var onFailure = function() {
+  var onError = function(error) {
+    console.error(error);
     window.clearTimeout(abortTimerId);
     self.fail();
     self.schedule();
   }
 
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState != 4)
-      return;
-
-    onSuccess();
+  xhr.onload = function() { 
+    if (xhr.status == 200) {
+      onSuccess();
+    } else {
+      onError(xhr.status + ': ' + xhr.statusText);
+    }
   }
-
-  xhr.onerror = function(error) {
-    onFailure();
-  }
+  xhr.onerror = onError;
 
   try {
-    xhr.open("GET", this.get_feed_url(), true);
+    xhr.open('GET', this.get_feed_url(), true);
     xhr.send(null);
   }
-  catch(e) {
-    onFailure();
+  catch(error) {
+    onError(error);
   }
 }
 
@@ -108,7 +107,7 @@ GmailAccountChecker.prototype.parse_feed = function(xml) {
 
 GmailAccountChecker.prototype.schedule = function() {
   if (this.pendingRequestTimerId_) {
-    window.clearTimeout(pendingRequestTimerId);
+    window.clearTimeout(this.pendingRequestTimerId_);
   }
   var pollIntervalMin = 1000 * 60;  // 1 minute
   var pollIntervalMax = 1000 * 60 * 60;  // 1 hour
