@@ -14,7 +14,18 @@ function GmailAccountChecker(index, onUpdate) {
 GmailAccountChecker.prototype.startCheck = function() {
   var xhr = new XMLHttpRequest();
 
+  var requestTimeout = 5 * 1000;  // 5 seconds
+  var abortTimerId = window.setTimeout(function() {
+    xhr.abort();  // synchronously calls xhr.onreadystatechange
+  }, requestTimeout);
+
   var self = this;
+  var onFailure = function() {
+    window.clearTimeout(abortTimerId);
+    self.fail();
+    self.schedule();
+  }
+
   xhr.onreadystatechange = function() {
     if (xhr.readyState != 4)
       return;
@@ -25,24 +36,15 @@ GmailAccountChecker.prototype.startCheck = function() {
   }
 
   xhr.onerror = function(error) {
-    window.clearTimeout(abortTimerId);
-    self.fail();
-    self.schedule();
+    onFailure();
   }
-
-  var requestTimeout = 1000 * 2;  // 5 seconds
-  var abortTimerId = window.setTimeout(function() {
-    xhr.abort();  // synchronously calls onreadystatechange
-  }, requestTimeout);  // 5 seeconds
 
   try {
     xhr.open("GET", this.get_feed_url(), true);
     xhr.send(null);
   }
   catch(e) {
-    window.clearTimeout(abortTimerId);
-    this.fail();
-    this.schedule();
+    onFailure();
   }
 }
 
