@@ -58,13 +58,13 @@ GmailAccountChecker.prototype.getBaseUrl = function() {
   return "https://mail.google.com/mail/u/" + this.index + "/";
 }
 
-function gmailNSResolver(prefix) {
-  if(prefix == 'gmail') {
-    return 'http://purl.org/atom/ns#';
-  }
-}
-
 GmailAccountChecker.prototype.parse_feed = function(xml) {
+  var gmailNSResolver = function(prefix) {
+    if(prefix == 'gmail') {
+      return 'http://purl.org/atom/ns#';
+    }
+  }
+
   var titleSet = xml.evaluate("/gmail:feed/gmail:title",
       xml, gmailNSResolver, XPathResult.ANY_TYPE, null);
   var titleNode = titleSet.iterateNext();
