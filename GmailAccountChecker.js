@@ -34,8 +34,15 @@ GmailAccountChecker.prototype.startCheck = function() {
     self.schedule();
   }
 
-  xhr.open("GET", this.get_feed_url(), true);
-  xhr.send(null);
+  try {
+    xhr.open("GET", this.get_feed_url(), true);
+    xhr.send(null);
+  }
+  catch(e) {
+    window.clearTimeout(abortTimerId);
+    this.fail();
+    this.schedule();
+  }
 }
 
 GmailAccountChecker.prototype.get_gmail_url = function() {
