@@ -1,5 +1,5 @@
 describe('GmailAccountChecker', function () {
-  it('initial state', function() {
+  it('basic flow', function() {
     spyOn(GmailAccountChecker, 'setTimeout_');
 
     var req = new XMLHttpRequest();
