@@ -9,17 +9,17 @@ GmailAccountChecker.prototype.get_feed_url = function() {
 GmailAccountChecker.prototype.update = function(email, count) {
   this.email = email;
   this.unreadCount = count;
-  this.lastUpdated = null;
-  this.requestFailures = 0;
-  this.onUpdate();
+  this.lastUpdated_ = null;
+  this.requestFailures_ = 0;
+  this.onUpdate_();
 }
 
 GmailAccountChecker.prototype.fail = function() {
   this.email = null;
   this.unreadCount = null;
-  this.lastUpdated = null;
-  ++this.requestFailures;
-  this.onUpdate();
+  this.lastUpdated_ = null;
+  ++this.requestFailures_;
+  this.onUpdate_();
 }
 
 function gmailNSResolver(prefix) {
@@ -59,13 +59,13 @@ GmailAccountChecker.prototype.schedule = function() {
   var pollIntervalMin = 1000 * 60;  // 1 minute
   var pollIntervalMax = 1000 * 60 * 60;  // 1 hour
   var randomness = Math.random() * 2;
-  var exponent = Math.pow(2, this.requestFailures);
+  var exponent = Math.pow(2, this.requestFailures_);
   var delay = Math.min(randomness * pollIntervalMin * exponent,
                        pollIntervalMax);
   delay = Math.round(delay);
 
   var self = this;
-  this.pendingRequestTimerId =
+  this.pendingRequestTimerId_ =
     window.setTimeout(function() { self.get_inbox_count(); }, delay);
 }
 
@@ -80,7 +80,7 @@ GmailAccountChecker.prototype.get_inbox_count = function() {
   function runHandler(xml) {
     window.clearTimeout(abortTimerId);
     self.parse_feed(xml);
-    if (this.pendingRequestTimerId) {
+    if (this.pendingRequestTimerId_) {
       window.clearTimeout(pendingRequestTimerId);
     }
     self.schedule();
@@ -108,11 +108,12 @@ GmailAccountChecker.prototype.get_inbox_count = function() {
 
 function GmailAccountChecker(index, onUpdate) {
   this.index = index;
-  this.onUpdate = onUpdate;
   this.email = null;
   this.unreadCount = null;
-  this.lastUpdated = null;
-  this.requestFailures = 0;
-  this.pendingRequestTimerId = null;
+
+  this.onUpdate_ = onUpdate;
+  this.lastUpdated_ = null;
+  this.requestFailures_ = 0;
+  this.pendingRequestTimerId_ = null;
   this.get_inbox_count();
 }
