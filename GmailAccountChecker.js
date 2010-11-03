@@ -65,26 +65,40 @@ GmailAccountChecker.prototype.parse_feed = function(xml) {
     }
   }
 
-  var titleSet = xml.evaluate("/gmail:feed/gmail:title",
-      xml, gmailNSResolver, XPathResult.ANY_TYPE, null);
+  var titleSet = xml.evaluate('/gmail:feed/gmail:title', xml,
+			      gmailNSResolver, XPathResult.ANY_TYPE, null);
   var titleNode = titleSet.iterateNext();
   if (!titleNode) {
     this.fail();
     return;
   }
   title = titleNode.textContent;
-  var match = /^Gmail - Inbox for (\S+)$/.exec(title);
-  email = match[1];
+  var emailMatch = /^Gmail - Inbox for (\S+)$/.exec(title);
+  if (!emailMatch) {
+    this.fail();
+    return;
+  }
+  email = emailMatch[1];
 
-  var fullCountSet = xml.evaluate("/gmail:feed/gmail:fullcount",
-      xml, gmailNSResolver, XPathResult.ANY_TYPE, null);
+  var fullCountSet = xml.evaluate('/gmail:feed/gmail:fullcount', xml,
+				  gmailNSResolver, XPathResult.ANY_TYPE, null);
   var fullCountNode = fullCountSet.iterateNext();
   if (!fullCountNode) {
     this.fail();
     return;
   }
-  fullCount = parseInt(fullCountNode.textContent);
-  this.update(email, fullCount);
+  fullCount = parseInt(fullCountNode.textContent, 10);
+  if (isNaN(fullCount)) {
+    this.fail();
+    return;
+  }
+
+  this.email = email;
+  this.unreadCount = fullCount;
+  // TODO(akalin): fill in lastUpdated_.
+  this.lastUpdated_ = null;
+  this.requestFailures_ = 0;
+  this.onUpdate_();
 }
 
 GmailAccountChecker.prototype.schedule = function() {
@@ -104,49 +118,13 @@ GmailAccountChecker.prototype.schedule = function() {
     window.setTimeout(function() { self.startCheck(); }, delay);
 }
 
-GmailAccountChecker.prototype.update = function(email, count) {
-  this.email = email;
-  this.unreadCount = count;
-  this.lastUpdated_ = null;
-  this.requestFailures_ = 0;
-  this.onUpdate_();
-}
-
 GmailAccountChecker.prototype.fail = function() {
   this.email = null;
   this.unreadCount = null;
+  // TODO(akalin): fill in lastUpdated_.
   this.lastUpdated_ = null;
   ++this.requestFailures_;
   this.onUpdate_();
-}
-
-function gmailNSResolver(prefix) {
-  if(prefix == 'gmail') {
-    return 'http://purl.org/atom/ns#';
-  }
-}
-
-GmailAccountChecker.prototype.parse_feed = function(xml) {
-  var titleSet = xml.evaluate("/gmail:feed/gmail:title",
-      xml, gmailNSResolver, XPathResult.ANY_TYPE, null);
-  var titleNode = titleSet.iterateNext();
-  if (!titleNode) {
-    this.fail();
-    return;
-  }
-  title = titleNode.textContent;
-  var match = /^Gmail - Inbox for (\S+)$/.exec(title);
-  email = match[1];
-
-  var fullCountSet = xml.evaluate("/gmail:feed/gmail:fullcount",
-      xml, gmailNSResolver, XPathResult.ANY_TYPE, null);
-  var fullCountNode = fullCountSet.iterateNext();
-  if (!fullCountNode) {
-    this.fail();
-    return;
-  }
-  fullCount = parseInt(fullCountNode.textContent);
-  this.update(email, fullCount);
 }
 
 GmailAccountChecker.prototype.schedule = function() {
