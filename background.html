@@ -9,9 +9,6 @@ var canvasContext;
 var unknownImage;
 var noUnreadImage;
 var unreadImage;
-var pollIntervalMin = 1000 * 60;  // 1 minute
-var pollIntervalMax = 1000 * 60 * 60;  // 1 hour
-var requestTimeout = 1000 * 2;  // 5 seconds
 var rotation = 0;
 
 function getGmailUrlIndex(url) {
@@ -69,20 +66,22 @@ function init() {
   unreadImage = document.getElementById('unread');
   canvasContext = canvas.getContext('2d');
 
+  var handler = function() {
+    if (loadingAnimation) loadingAnimation.stop();
+    updateUnreadCount(mail_states);
+  };
+
   var mail_states = [
-    new MailState(0),
-    new MailState(1),
-    new MailState(2),
+    new MailState(0, handler),
+    new MailState(1, handler),
+    new MailState(2, handler),
   ];
 
   chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
     if (changeInfo.url) {
       index = getGmailUrlIndex(changeInfo.url);
       if (index != -1) {
-        console.info("Detected tab for inbox " + index);
-        getInboxCount(mail_states[index].get_feed_url(), function(xml) {
-          updateUnreadCount(mail_states, null, index, xml);
-        });
+        mail_states[index].get_inbox_count();
       }
     }
   });
@@ -95,66 +94,6 @@ function init() {
 
   var loadingAnimation = new LoadingAnimation();
   loadingAnimation.start();
-
-  for (i = 0; i < 3; ++i) {
-    startRequest(i, mail_states, loadingAnimation);
-  }
-}
-
-function scheduleRequest(index, mail_states) {
-  var randomness = Math.random() * 2;
-  console.info("requestFailureCount = " + mail_states[index].request_failures);
-  var exponent = Math.pow(2, mail_states[index].request_failures);
-  var delay = Math.min(randomness * pollIntervalMin * exponent,
-                       pollIntervalMax);
-  delay = Math.round(delay);
-
-  console.info("scheduling request for inbox " + index +
-	       " at " + delay + " ms");
-  window.setTimeout(function() { startRequest(index, mail_states, null); }, delay);
-}
-
-// ajax stuff
-function startRequest(index, mail_states, loadingAnimation) {
-  console.info("starting request for inbox " + index);
-  getInboxCount(mail_states[index].get_feed_url(),
-    function(xml) {
-      if (loadingAnimation) loadingAnimation.stop();
-      updateUnreadCount(mail_states, loadingAnimation, index, xml);
-      scheduleRequest(index, mail_states);
-    }
-  );
-}
-
-function getInboxCount(feed_url, handler) {
-  var xhr = new XMLHttpRequest();
-  var abortTimerId = window.setTimeout(function() {
-    xhr.abort();  // synchronously calls onreadystatechange
-  }, requestTimeout);
-
-  function runHandler(xml) {
-    window.clearTimeout(abortTimerId);
-    handler(xml);
-  }
-
-  try {
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState != 4)
-        return;
-
-      runHandler(xhr.responseXML);
-    }
-
-    xhr.onerror = function(error) {
-      runHandler(null);
-    }
-
-    xhr.open("GET", feed_url, true);
-    xhr.send(null);
-  } catch(e) {
-    console.error(chrome.i18n.getMessage("gmailcheck_exception", e));
-    runHandler(null);
-  }
 }
 
 function calculateUnreadCount(mail_states, email_re) {
@@ -168,14 +107,10 @@ function calculateUnreadCount(mail_states, email_re) {
   return unreadCount;
 }
 
-function updateUnreadCount(mail_states, loadingAnimation, index, xml) {
+function updateUnreadCount(mail_states) {
   var email_re = /@gmail\.com$/;
-  var oldUnreadCount = calculateUnreadCount(mail_states, email_re);
-  mail_states[index].parse_feed(xml);
   var unreadCount = calculateUnreadCount(mail_states, email_re);
-  console.info("old=" + oldUnreadCount + ", new=" + unreadCount);
-  if (loadingAnimation || oldUnreadCount != unreadCount)
-    animateFlip(unreadCount);
+  animateFlip(unreadCount);
 }
 
 
