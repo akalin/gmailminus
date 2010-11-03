@@ -1,6 +1,10 @@
 describe('GmailAccountChecker', function () {
   it('initial state', function() {
-    spyOn(GmailAccountChecker, 'makeXMLHttpRequest_');
+    var req = new XMLHttpRequest();
+    spyOn(GmailAccountChecker, 'makeXMLHttpRequest_').andReturn(req);
+    spyOn(req, 'open');
+    spyOn(req, 'send');
+
     spyOn(GmailAccountChecker, 'setTimeout_');
     spyOn(GmailAccountChecker, 'clearTimeout_');
 
