@@ -38,8 +38,8 @@ body {
   margin-top:1em;
 }
 
-#custom-domain {
-  width:300px;
+#email-regexp {
+  width:150px;
   margin-left:2px;
 }
 
@@ -49,15 +49,7 @@ body {
 </style>
 </head>
 <body>
-
-<div id="header"><h1>Google Mail Checker Options</h1></div>
-
-<div class="section-header first">Custom Domain</div>
-<p>To use Google Mail checker with Google Apps for Your Domain, enter the domain here.
-<p>
-  https://mail.google.com/<input type="text" id="custom-domain" oninput="markDirty()">
-    <em>(eg a/mydomain.com)</em>
-
+E-mail regexp <input type="text" id="email-regexp" oninput="markDirty()">
 <div id="footer">
   <button id="save-button" style="font-weight:bold" onclick="save()"
     >Save</button>
@@ -65,24 +57,34 @@ body {
 </div>
 
 <script>
-var customDomainsTextbox;
+var emailRegexpTextbox;
 var saveButton;
 
 init();
 
 function init() {
-  customDomainsTextbox = document.getElementById("custom-domain");
+  emailRegexpTextbox = document.getElementById("email-regexp");
   saveButton = document.getElementById("save-button");
 
-  customDomainsTextbox.value = localStorage.customDomain || "";
+  emailRegexpTextbox.value = localStorage.emailRegexp || "";
   markClean();
 }
 
 function save() {
-  localStorage.customDomain = customDomainsTextbox.value;
+  var emailRegexpText = emailRegexpTextbox.value;
+  var emailRegexp;
+  try {
+    emailRegexp = new RegExp(emailRegexpText, '');
+  }
+  catch(error) {
+    console.warn(error);
+    return;
+  }
+
+  localStorage.emailRegexp = emailRegexpText;
   markClean();
 
-  chrome.extension.getBackgroundPage().init();
+  chrome.extension.getBackgroundPage().updateEmailRegexp(emailRegexp);
 }
 
 function markDirty() {

@@ -1,272 +1,81 @@
+<!DOCTYPE html>
 <html>
 <head>
-<script type="text/javascript" src="MailState.js"></script>
+<script type="text/javascript" src="GmailAccountChecker.js"></script>
+<script type="text/javascript" src="GmailChecker.js"></script>
 <script>
-var animationFrames = 36;
-var animationSpeed = 10; // ms
-var canvas;
-var canvasContext;
-var unknownImage;
-var noUnreadImage;
-var unreadImage;
-var pollIntervalMin = 1000 * 60;  // 1 minute
-var pollIntervalMax = 1000 * 60 * 60;  // 1 hour
-var requestTimeout = 1000 * 2;  // 5 seconds
-var rotation = 0;
 
-function getGmailUrlIndex(url) {
-  var match = /^https:\/\/mail.google.com\/mail\/u\/([012])/.exec(url);
-  return match ? match[1] : -1;
-}
+chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]})
+chrome.browserAction.setIcon({path: "gmail_unknown.png"});
+chrome.browserAction.setBadgeText({
+    text: "..."
+});
 
-// A "loading" animation displayed while we wait for the first response from
-// Gmail. This animates the badge text with a dot that cycles from left to
-// right.
-function LoadingAnimation() {
-  this.timerId_ = 0;
-  this.maxCount_ = 8;  // Total number of states in animation
-  this.current_ = 0;  // Current state
-  this.maxDot_ = 4;  // Max number of dots in animation
-}
+var checker = makeChecker();
 
-LoadingAnimation.prototype.paintFrame = function() {
-  var text = "";
-  for (var i = 0; i < this.maxDot_; i++) {
-    text += (i == this.current_) ? "." : " ";
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
+  if (changeInfo.url) {
+    checker.onTabUpdated(changeInfo.url);
   }
-  if (this.current_ >= this.maxDot_)
-    text += "";
-
-  chrome.browserAction.setBadgeText({text:text});
-  this.current_++;
-  if (this.current_ == this.maxCount_)
-    this.current_ = 0;
-}
-
-LoadingAnimation.prototype.start = function() {
-  if (this.timerId_)
-    return;
-
-  var self = this;
-  this.timerId_ = window.setInterval(function() {
-    self.paintFrame();
-  }, 100);
-}
-
-LoadingAnimation.prototype.stop = function() {
-  if (!this.timerId_)
-    return;
-
-  window.clearInterval(this.timerId_);
-  this.timerId_ = 0;
-}
-
-
-function init() {
-  canvas = document.getElementById('canvas');
-  unknownImage = document.getElementById('unknown');
-  noUnreadImage = document.getElementById('no_unread');
-  unreadImage = document.getElementById('unread');
-  canvasContext = canvas.getContext('2d');
-
-  var mail_states = [
-    new MailState(0),
-    new MailState(1),
-    new MailState(2),
-  ];
-
-  chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
-    if (changeInfo.url) {
-      index = getGmailUrlIndex(changeInfo.url);
-      if (index != -1) {
-        console.info("Detected tab for inbox " + index);
-        getInboxCount(mail_states[index].get_feed_url(), function(xml) {
-          updateUnreadCount(mail_states, null, index, xml);
-        });
-      }
-    }
-  });
-
-  chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]})
-  chrome.browserAction.setIcon({path: "gmail_unknown.png"});
-  chrome.browserAction.setBadgeText({
-    text: "?"
-  });
-
-  var loadingAnimation = new LoadingAnimation();
-  loadingAnimation.start();
-
-  for (i = 0; i < 3; ++i) {
-    startRequest(i, mail_states, loadingAnimation);
-  }
-}
-
-function scheduleRequest(index, mail_states) {
-  var randomness = Math.random() * 2;
-  console.info("requestFailureCount = " + mail_states[index].request_failures);
-  var exponent = Math.pow(2, mail_states[index].request_failures);
-  var delay = Math.min(randomness * pollIntervalMin * exponent,
-                       pollIntervalMax);
-  delay = Math.round(delay);
-
-  console.info("scheduling request for inbox " + index +
-	       " at " + delay + " ms");
-  window.setTimeout(function() { startRequest(index, mail_states, null); }, delay);
-}
-
-// ajax stuff
-function startRequest(index, mail_states, loadingAnimation) {
-  console.info("starting request for inbox " + index);
-  getInboxCount(mail_states[index].get_feed_url(),
-    function(xml) {
-      if (loadingAnimation) loadingAnimation.stop();
-      updateUnreadCount(mail_states, loadingAnimation, index, xml);
-      scheduleRequest(index, mail_states);
-    }
-  );
-}
-
-function getInboxCount(feed_url, handler) {
-  var xhr = new XMLHttpRequest();
-  var abortTimerId = window.setTimeout(function() {
-    xhr.abort();  // synchronously calls onreadystatechange
-  }, requestTimeout);
-
-  function runHandler(xml) {
-    window.clearTimeout(abortTimerId);
-    handler(xml);
-  }
-
-  try {
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState != 4)
-        return;
-
-      runHandler(xhr.responseXML);
-    }
-
-    xhr.onerror = function(error) {
-      runHandler(null);
-    }
-
-    xhr.open("GET", feed_url, true);
-    xhr.send(null);
-  } catch(e) {
-    console.error(chrome.i18n.getMessage("gmailcheck_exception", e));
-    runHandler(null);
-  }
-}
-
-function calculateUnreadCount(mail_states, email_re) {
-  var unreadCount = null;
-  for (i in mail_states) {
-    if (email_re.test(mail_states[i].email)) {
-      unreadCount = unreadCount || 0;
-      unreadCount += mail_states[i].mail_count;
-    }
-  }
-  return unreadCount;
-}
-
-function updateUnreadCount(mail_states, loadingAnimation, index, xml) {
-  var email_re = /@gmail\.com$/;
-  var oldUnreadCount = calculateUnreadCount(mail_states, email_re);
-  mail_states[index].parse_feed(xml);
-  var unreadCount = calculateUnreadCount(mail_states, email_re);
-  console.info("old=" + oldUnreadCount + ", new=" + unreadCount);
-  if (loadingAnimation || oldUnreadCount != unreadCount)
-    animateFlip(unreadCount);
-}
-
-
-function ease(x) {
-  return (1-Math.sin(Math.PI/2+x*Math.PI))/2;
-}
-
-function animateFlip(unreadCount) {
-  rotation += 1/animationFrames;
-  drawIconAtRotation(unreadCount);
-
-  if (rotation <= 1) {
-    setTimeout(function() { animateFlip(unreadCount) }, animationSpeed);
-  } else {
-    rotation = 0;
-    drawIconAtRotation(unreadCount);
-    if (unreadCount == null) {
-      chrome.browserAction.setBadgeText({
-        text: "?"
-      });
-      chrome.browserAction.setIcon({path:"gmail_unknown.png"});
-      chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]});
-    } else if (unreadCount == 0) {
-      chrome.browserAction.setBadgeText({
-        text: ""
-      });
-      chrome.browserAction.setIcon({path: "gmail_no_unread.png"});
-      chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
-    } else {
-      chrome.browserAction.setBadgeText({
-        text: unreadCount.toString(10)
-      });
-      chrome.browserAction.setIcon({path: "gmail_unread.png"});
-	chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
-    }
-  }
-}
-
-function drawIconAtRotation(unreadCount) {
-  canvasContext.save();
-  canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-  canvasContext.translate(
-      Math.ceil(canvas.width/2),
-      Math.ceil(canvas.height/2));
-  canvasContext.rotate(2*Math.PI*ease(rotation));
-  var image;
-  if (unreadCount == null) {
-    image = unknownImage;
-  } else if (unreadCount == 0) {
-    image = noUnreadImage;
-  } else {
-    image = unreadImage;
-  }
-  canvasContext.drawImage(image,
-      -Math.ceil(canvas.width/2),
-      -Math.ceil(canvas.height/2));
-  canvasContext.restore();
-
-  chrome.browserAction.setIcon({imageData:canvasContext.getImageData(0, 0,
-      canvas.width,canvas.height)});
-}
-
-function goToInbox() {
-  chrome.tabs.getAllInWindow(undefined, function(tabs) {
-    for (var i = 0, tab; tab = tabs[i]; i++) {
-      if (tab.url) {
-        index = getGmailUrlIndex(tab.url);
-        console.info("Going to inbox " + index);
-        if (index != -1) {
-          chrome.tabs.update(tab.id, {selected: true});
-          return;
-        }
-      }
-    }
-    console.info("Going to default inbox");
-    chrome.tabs.create({url: (new MailState(0)).get_gmail_url()});
-  });
-}
+});
 
 // Called when the user clicks on the browser action.
 chrome.browserAction.onClicked.addListener(function(tab) {
-  goToInbox();
+  chrome.tabs.getAllInWindow(undefined, function(tabs) {
+    var i = checker.findInboxTab(tabs);
+    if (i != null) {
+      chrome.tabs.update(tabs[i].id, {selected: true});
+    } else {
+      chrome.tabs.create({url: checker.getDefaultUrl()});
+    }
+  });
 });
 
+function updateEmailRegexp(emailRegexp) {
+  checker.emailRegexp = emailRegexp;
+  // TODO(akalin): Kick off check.
+}
+
+function makeChecker() {
+  var handler = function() {
+    updateBadge(checker.unreadCount, checker.getTooltip());
+  };
+  var emailRegexpText = localStorage.emailRegexp;
+  var emailRegexp;
+  try {
+    emailRegexp = new RegExp(emailRegexpText, '');
+  }
+  catch(error) {
+    console.warn(error);
+    emailRegexp = /.*/;
+  }
+  var checker = new GmailChecker(emailRegexp, handler);
+  return checker;
+}
+
+function updateBadge(unreadCount, tooltip) {
+  if (unreadCount == null) {
+    chrome.browserAction.setBadgeText({
+      text: "?"
+    });
+    chrome.browserAction.setIcon({path:"gmail_unknown.png"});
+    chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]});
+  } else if (unreadCount == 0) {
+    chrome.browserAction.setBadgeText({
+      text: ""
+    });
+    chrome.browserAction.setIcon({path: "gmail_no_unread.png"});
+    chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
+  } else {
+    chrome.browserAction.setBadgeText({
+      text: unreadCount.toString(10)
+    });
+    chrome.browserAction.setIcon({path: "gmail_unread.png"});
+    chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
+  }
+  chrome.browserAction.setTitle({title: tooltip});
+}
 </script>
 </head>
-<body onload="init()">
-<img id="unknown" src="gmail_unknown.png">
-<img id="no_unread" src="gmail_no_unread.png">
-<img id="unread" src="gmail_unread.png">
-<canvas id="canvas" width="19" height="19">
-</body>
+<body></body>
 </html>
-
