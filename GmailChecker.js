@@ -71,8 +71,6 @@ GmailChecker.prototype.onAccountUpdate_ = function() {
     }
   }
   console.info("unreadCount: " + this.unreadCount + " -> " + newUnreadCount);
-  if (this.unreadCount != newUnreadCount) {
-    this.unreadCount = newUnreadCount;
-    this.onUpdate_();
-  }
+  this.unreadCount = newUnreadCount;
+  this.onUpdate_();
 }
