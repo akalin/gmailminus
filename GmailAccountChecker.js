@@ -12,18 +12,18 @@ function GmailAccountChecker(index, onUpdate) {
 }
 
 GmailAccountChecker.prototype.startCheck = function() {
-  var xhr = new XMLHttpRequest();
+  var req = new XMLHttpRequest();
 
   var requestTimeout = 5 * 1000;  // 5 seconds
   var abortTimerId = window.setTimeout(function() {
-    xhr.abort();  // synchronously calls xhr.onreadystatechange
+    req.abort();  // synchronously calls req.onreadystatechange
   }, requestTimeout);
 
   var self = this;
 
   var onSuccess = function() {
     window.clearTimeout(abortTimerId);
-    self.parseFeed_(xhr.responseXML);
+    self.parseFeed_(req.responseXML);
     self.scheduleNextCheck_();
   }
 
@@ -33,20 +33,20 @@ GmailAccountChecker.prototype.startCheck = function() {
     self.scheduleNextCheck_();
   }
 
-  xhr.onload = function() { 
-    if (xhr.status == 200) {
+  req.onload = function() { 
+    if (req.status == 200) {
       onSuccess();
     } else {
-      onError(xhr.status + ': ' + xhr.statusText);
+      onError(req.status + ': ' + req.statusText);
     }
   }
-  xhr.onerror = onError;
+  req.onerror = onError;
 
   var feedUrl = this.getBaseUrl() + "feed/atom/";
 
   try {
-    xhr.open('GET', feedUrl, true);
-    xhr.send(null);
+    req.open('GET', feedUrl, true);
+    req.send(null);
   }
   catch(error) {
     onError(error);
