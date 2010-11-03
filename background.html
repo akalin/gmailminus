@@ -1,85 +1,25 @@
+<!DOCTYPE html>
 <html>
 <head>
 <script type="text/javascript" src="GmailAccountChecker.js"></script>
 <script type="text/javascript" src="GmailChecker.js"></script>
 <script>
-var animationFrames = 36;
-var animationSpeed = 10; // ms
-var canvas;
-var canvasContext;
-var unknownImage;
-var noUnreadImage;
-var unreadImage;
-var rotation = 0;
-
-// A "loading" animation displayed while we wait for the first response from
-// Gmail. This animates the badge text with a dot that cycles from left to
-// right.
-function LoadingAnimation() {
-  this.timerId_ = 0;
-  this.maxCount_ = 8;  // Total number of states in animation
-  this.current_ = 0;  // Current state
-  this.maxDot_ = 4;  // Max number of dots in animation
-}
-
-LoadingAnimation.prototype.paintFrame = function() {
-  var text = "";
-  for (var i = 0; i < this.maxDot_; i++) {
-    text += (i == this.current_) ? "." : " ";
-  }
-  if (this.current_ >= this.maxDot_)
-    text += "";
-
-  chrome.browserAction.setBadgeText({text:text});
-  this.current_++;
-  if (this.current_ == this.maxCount_)
-    this.current_ = 0;
-}
-
-LoadingAnimation.prototype.start = function() {
-  if (this.timerId_)
-    return;
-
-  var self = this;
-  this.timerId_ = window.setInterval(function() {
-    self.paintFrame();
-  }, 100);
-}
-
-LoadingAnimation.prototype.stop = function() {
-  if (!this.timerId_)
-    return;
-
-  window.clearInterval(this.timerId_);
-  this.timerId_ = 0;
-}
-
 function init() {
-  canvas = document.getElementById('canvas');
-  unknownImage = document.getElementById('unknown');
-  noUnreadImage = document.getElementById('no_unread');
-  unreadImage = document.getElementById('unread');
-  canvasContext = canvas.getContext('2d');
-
-  var loadingAnimation = new LoadingAnimation();
+  chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]})
+  chrome.browserAction.setIcon({path: "gmail_unknown.png"});
+  chrome.browserAction.setBadgeText({
+    text: "..."
+  });
 
   var handler = function() {
-    loadingAnimation.stop();
-    animateFlip(checker.unreadCount);
+    updateBadge(checker.unreadCount);
   };
-
   var checker = new GmailChecker(/@gmail\.com$/, handler);
 
   chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
     if (changeInfo.url) {
       checker.onTabUpdated(changeInfo.url);
     }
-  });
-
-  chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]})
-  chrome.browserAction.setIcon({path: "gmail_unknown.png"});
-  chrome.browserAction.setBadgeText({
-    text: "?"
   });
 
   // Called when the user clicks on the browser action.
@@ -93,76 +33,31 @@ function init() {
       }
     });
   });
-
-  loadingAnimation.start();
 }
 
-function ease(x) {
-  return (1-Math.sin(Math.PI/2+x*Math.PI))/2;
-}
-
-function animateFlip(unreadCount) {
-  rotation += 1/animationFrames;
-  drawIconAtRotation(unreadCount);
-
-  if (rotation <= 1) {
-    setTimeout(function() { animateFlip(unreadCount) }, animationSpeed);
-  } else {
-    rotation = 0;
-    drawIconAtRotation(unreadCount);
-    if (unreadCount == null) {
-      chrome.browserAction.setBadgeText({
-        text: "?"
-      });
-      chrome.browserAction.setIcon({path:"gmail_unknown.png"});
-      chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]});
-    } else if (unreadCount == 0) {
-      chrome.browserAction.setBadgeText({
-        text: ""
-      });
-      chrome.browserAction.setIcon({path: "gmail_no_unread.png"});
-      chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
-    } else {
-      chrome.browserAction.setBadgeText({
-        text: unreadCount.toString(10)
-      });
-      chrome.browserAction.setIcon({path: "gmail_unread.png"});
-	chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
-    }
-  }
-}
-
-function drawIconAtRotation(unreadCount) {
-  canvasContext.save();
-  canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-  canvasContext.translate(
-      Math.ceil(canvas.width/2),
-      Math.ceil(canvas.height/2));
-  canvasContext.rotate(2*Math.PI*ease(rotation));
-  var image;
+function updateBadge(unreadCount) {
   if (unreadCount == null) {
-    image = unknownImage;
+    chrome.browserAction.setBadgeText({
+      text: "?"
+    });
+    chrome.browserAction.setIcon({path:"gmail_unknown.png"});
+    chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]});
   } else if (unreadCount == 0) {
-    image = noUnreadImage;
+    chrome.browserAction.setBadgeText({
+      text: ""
+    });
+    chrome.browserAction.setIcon({path: "gmail_no_unread.png"});
+    chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
   } else {
-    image = unreadImage;
+    chrome.browserAction.setBadgeText({
+      text: unreadCount.toString(10)
+    });
+    chrome.browserAction.setIcon({path: "gmail_unread.png"});
+    chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
   }
-  canvasContext.drawImage(image,
-      -Math.ceil(canvas.width/2),
-      -Math.ceil(canvas.height/2));
-  canvasContext.restore();
-
-  chrome.browserAction.setIcon({imageData:canvasContext.getImageData(0, 0,
-      canvas.width,canvas.height)});
 }
-
 </script>
 </head>
 <body onload="init()">
-<img id="unknown" src="gmail_unknown.png">
-<img id="no_unread" src="gmail_no_unread.png">
-<img id="unread" src="gmail_unread.png">
-<canvas id="canvas" width="19" height="19">
 </body>
 </html>
-
