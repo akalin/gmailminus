@@ -43,8 +43,10 @@ GmailAccountChecker.prototype.startCheck = function() {
   }
   xhr.onerror = onError;
 
+  var feedUrl = this.get_gmail_url() + "feed/atom/";
+
   try {
-    xhr.open('GET', this.get_feed_url(), true);
+    xhr.open('GET', feedUrl, true);
     xhr.send(null);
   }
   catch(error) {
@@ -100,10 +102,6 @@ GmailAccountChecker.prototype.schedule = function() {
 
 GmailAccountChecker.prototype.get_gmail_url = function() {
   return "https://mail.google.com/mail/u/" + this.index + "/";
-}
-
-GmailAccountChecker.prototype.get_feed_url = function() {
-  return this.get_gmail_url() + "feed/atom/";
 }
 
 GmailAccountChecker.prototype.update = function(email, count) {
