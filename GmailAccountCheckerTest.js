@@ -91,4 +91,32 @@ describe('GmailAccountChecker', function () {
     expect(GmailAccountChecker.clearTimeout_).toHaveBeenCalled();
     expect(GmailAccountChecker.setTimeout_.callCount).toEqual(2);
   });
+
+  it('request error', function() {
+    var checker = new GmailAccountChecker(1, callbackSpy);
+    expect(checker.index).toEqual(1);
+    expect(checker.email).toEqual(null);
+    expect(checker.unreadCount).toEqual(null);
+    expect(checker.lastUpdateTime).toEqual(null);
+    expect(checker.lastError).toEqual(null);
+
+    expect(GmailAccountChecker.setTimeout_).toHaveBeenCalled();
+    expect(GmailAccountChecker.makeXMLHttpRequest_).toHaveBeenCalled();
+    expect(fakeReq.open).toHaveBeenCalled();
+    expect(fakeReq.send).toHaveBeenCalled();
+    expect(callbackSpy).not.toHaveBeenCalled();
+    expect(GmailAccountChecker.clearTimeout_).not.toHaveBeenCalled();
+
+    fakeReq.status = 404;
+    fakeReq.onload();
+    expect(checker.index).toEqual(1);
+    expect(checker.email).toEqual(null);
+    expect(checker.unreadCount).toEqual(null);
+    expect(checker.lastUpdateTime).toNotEqual(null);
+    expect(checker.lastError).toNotEqual(null);
+
+    expect(callbackSpy).toHaveBeenCalled();
+    expect(GmailAccountChecker.clearTimeout_).toHaveBeenCalled();
+    expect(GmailAccountChecker.setTimeout_.callCount).toEqual(2);
+  });
 });
