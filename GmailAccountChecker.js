@@ -12,24 +12,27 @@ function GmailAccountChecker(index, onUpdate) {
   this.startCheck();
 }
 
+GmailAccountChecker.prototype.setTimeout_ = setTimeout;
+GmailAccountChecker.prototype.clearTimeout_ = clearTimeout;
+
 GmailAccountChecker.prototype.startCheck = function() {
   var req = new XMLHttpRequest();
 
   var requestTimeout = 5 * 1000;  // 5 seconds
-  var abortTimerId = window.setTimeout(function() {
+  var abortTimerId = this.setTimeout_(function() {
     req.abort();
   }, requestTimeout);
 
   var self = this;
 
   var onSuccess = function() {
-    window.clearTimeout(abortTimerId);
+    self.clearTimeout_(abortTimerId);
     self.parseFeed_(req.responseXML);
     self.scheduleNextCheck_();
   }
 
   var onError = function(error) {
-    window.clearTimeout(abortTimerId);
+    self.clearTimeout_(abortTimerId);
     self.onError_(error);
     self.scheduleNextCheck_();
   }
@@ -103,7 +106,7 @@ GmailAccountChecker.prototype.parseFeed_ = function(xml) {
 
 GmailAccountChecker.prototype.scheduleNextCheck_ = function() {
   if (this.pendingRequestTimerId_) {
-    window.clearTimeout(this.pendingRequestTimerId_);
+    this.clearTimeout_(this.pendingRequestTimerId_);
   }
   var pollIntervalMin = 60 * 1000;  // 1 minute
   var pollIntervalMax = 60 * 60 * 1000;  // 1 hour
@@ -115,7 +118,7 @@ GmailAccountChecker.prototype.scheduleNextCheck_ = function() {
 
   var self = this;
   this.pendingRequestTimerId_ =
-    window.setTimeout(function() { self.startCheck(); }, delay);
+    this.setTimeout_(function() { self.startCheck(); }, delay);
 }
 
 GmailAccountChecker.prototype.onError_ = function(error) {
