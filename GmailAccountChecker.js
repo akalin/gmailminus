@@ -55,7 +55,7 @@ GmailAccountChecker.prototype.startCheck = function() {
   }
   req.onerror = onError;
 
-  var feedUrl = this.getBaseUrl() + "feed/atom/";
+  var feedUrl = this.getBaseUrl() + 'feed/atom/';
 
   try {
     req.open('GET', feedUrl, true);
@@ -67,7 +67,7 @@ GmailAccountChecker.prototype.startCheck = function() {
 }
 
 GmailAccountChecker.prototype.getBaseUrl = function() {
-  return "https://mail.google.com/mail/u/" + this.index + "/";
+  return 'https://mail.google.com/mail/u/' + this.index + '/';
 }
 
 GmailAccountChecker.prototype.parseFeed_ = function(xml) {
