@@ -107,14 +107,14 @@ GmailAccountChecker.prototype.parseFeed_ = function(xml) {
     return;
   }
 
+  console.info('updating ' + this.index + ' to ' + email + ':' + fullCount);
+
   this.requestFailures_ = 0;
   this.email = email;
   this.unreadCount = fullCount;
   this.lastUpdateTime = new Date();
   this.lastError = null;
   this.onUpdate_();
-
-  console.info('updated ' + this.index + ' to ' + email + ':' + fullCount);
 }
 
 GmailAccountChecker.prototype.scheduleNextCheck_ = function() {
@@ -129,19 +129,21 @@ GmailAccountChecker.prototype.scheduleNextCheck_ = function() {
                        pollIntervalMax);
   delay = Math.round(delay);
 
+  console.info('scheduling next check for ' + this.index + ' for ' +
+	       delay/1000.0 + 's');
+
   var self = this;
   this.pendingRequestTimerId_ =
     GmailAccountChecker.setTimeout_(function() { self.startCheck(); }, delay);
-  console.info('scheduling next check for ' + this.index + ' for ' +
-	       delay/1000.0 + 's');
 }
 
 GmailAccountChecker.prototype.onError_ = function(error) {
+  console.warn('got error for ' + this.index + ': ' + error);
+
   ++this.requestFailures_;
   this.email = null;
   this.unreadCount = null;
   this.lastUpdateTime = new Date();
   this.lastError = error;
   this.onUpdate_();
-  console.warn('got error for ' + 2 + ': ' + error);
 }
