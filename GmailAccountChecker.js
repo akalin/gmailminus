@@ -94,8 +94,7 @@ GmailAccountChecker.prototype.parseFeed_ = function(xml) {
 
   this.email = email;
   this.unreadCount = fullCount;
-  // TODO(akalin): fill in lastUpdated_.
-  this.lastUpdated_ = null;
+  this.lastUpdated_ = new Date();
   this.requestFailures_ = 0;
   this.onUpdate_();
 }
@@ -121,8 +120,7 @@ GmailAccountChecker.prototype.onError_ = function(error) {
   console.error(error);
   this.email = null;
   this.unreadCount = null;
-  // TODO(akalin): fill in lastUpdated_.
-  this.lastUpdated_ = null;
+  this.lastUpdated_ = new Date();
   ++this.requestFailures_;
   this.onUpdate_();
 }
