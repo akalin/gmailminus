@@ -27,7 +27,7 @@ function init() {
     chrome.tabs.getAllInWindow(undefined, function(tabs) {
       var i = checker.findInboxTab(tabs);
       if (i != null) {
-        chrome.tabs.update(tab.id, {selected: true});
+        chrome.tabs.update(tabs[i].id, {selected: true});
       } else {
         chrome.tabs.create({url: checker.getDefaultUrl()});
       }

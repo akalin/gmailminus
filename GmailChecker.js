@@ -40,7 +40,7 @@ GmailChecker.prototype.findInboxTab = function(tabs) {
 }
 
 GmailChecker.prototype.getDefaultUrl = function() {
-  return accountsCheckers_[0].getBaseUrl();
+  return this.accountCheckers_[0].getBaseUrl();
 }
 
 GmailChecker.prototype.onAccountUpdate_ = function() {
