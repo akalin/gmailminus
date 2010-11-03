@@ -8,18 +8,18 @@ GmailAccountChecker.prototype.get_feed_url = function() {
 
 GmailAccountChecker.prototype.update = function(email, count) {
   this.email = email;
-  this.mail_count = count;
-  this.last_updated = null;
-  this.request_failures = 0;
-  this.on_change();
+  this.unreadCount = count;
+  this.lastUpdated = null;
+  this.requestFailures = 0;
+  this.onUpdate();
 }
 
 GmailAccountChecker.prototype.fail = function() {
   this.email = null;
-  this.mail_count = null;
-  this.last_updated = null;
-  ++this.request_failures;
-  this.on_change();
+  this.unreadCount = null;
+  this.lastUpdated = null;
+  ++this.requestFailures;
+  this.onUpdate();
 }
 
 function gmailNSResolver(prefix) {
@@ -59,13 +59,13 @@ GmailAccountChecker.prototype.schedule = function() {
   var pollIntervalMin = 1000 * 60;  // 1 minute
   var pollIntervalMax = 1000 * 60 * 60;  // 1 hour
   var randomness = Math.random() * 2;
-  var exponent = Math.pow(2, this.request_failures);
+  var exponent = Math.pow(2, this.requestFailures);
   var delay = Math.min(randomness * pollIntervalMin * exponent,
                        pollIntervalMax);
   delay = Math.round(delay);
 
   var self = this;
-  this.pending_request =
+  this.pendingRequestTimerId =
     window.setTimeout(function() { self.get_inbox_count(); }, delay);
 }
 
@@ -80,8 +80,8 @@ GmailAccountChecker.prototype.get_inbox_count = function() {
   function runHandler(xml) {
     window.clearTimeout(abortTimerId);
     self.parse_feed(xml);
-    if (this.pending_request) {
-      window.clearTimeout(pending_request);
+    if (this.pendingRequestTimerId) {
+      window.clearTimeout(pendingRequestTimerId);
     }
     self.schedule();
   }
@@ -106,13 +106,13 @@ GmailAccountChecker.prototype.get_inbox_count = function() {
   }
 }
 
-function GmailAccountChecker(index, on_change) {
+function GmailAccountChecker(index, onUpdate) {
   this.index = index;
-  this.on_change = on_change;
+  this.onUpdate = onUpdate;
   this.email = null;
-  this.mail_count = null;
-  this.last_updated = null;
-  this.request_failures = 0;
-  this.pending_request = null;
+  this.unreadCount = null;
+  this.lastUpdated = null;
+  this.requestFailures = 0;
+  this.pendingRequestTimerId = null;
   this.get_inbox_count();
 }
