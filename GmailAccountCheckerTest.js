@@ -7,8 +7,8 @@ describe('GmailAccountChecker', function () {
     spyOn(req, 'open');
     spyOn(req, 'send');
 
-    spyOn(GmailAccountChecker, 'clearTimeout_');
     var spy = jasmine.createSpy();
+    spyOn(GmailAccountChecker, 'clearTimeout_');
 
     var checker = new GmailAccountChecker(2, spy);
     expect(checker.index).toEqual(2);
@@ -21,6 +21,8 @@ describe('GmailAccountChecker', function () {
     expect(GmailAccountChecker.makeXMLHttpRequest_).toHaveBeenCalled();
     expect(req.open).toHaveBeenCalled();
     expect(req.send).toHaveBeenCalled();
+    expect(spy).not.toHaveBeenCalled();
+    expect(GmailAccountChecker.clearTimeout_).not.toHaveBeenCalled();
 
     req.status = 200;
     req.onload();
@@ -30,6 +32,8 @@ describe('GmailAccountChecker', function () {
     expect(checker.lastUpdateTime).toNotEqual(null);
     expect(checker.lastError).toEqual(null);
 
+    expect(spy).toHaveBeenCalled();
     expect(GmailAccountChecker.clearTimeout_).toHaveBeenCalled();
+    expect(GmailAccountChecker.setTimeout_.callCount).toEqual(2);
   });
 });
