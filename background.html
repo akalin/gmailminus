@@ -100,7 +100,7 @@ function calculateUnreadCount(account_checkers, email_re) {
   for (i in account_checkers) {
     if (email_re.test(account_checkers[i].email)) {
       unreadCount = unreadCount || 0;
-      unreadCount += account_checkers[i].mail_count;
+      unreadCount += account_checkers[i].unreadCount;
     }
   }
   return unreadCount;
