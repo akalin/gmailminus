@@ -1,3 +1,15 @@
+GmailAccountChecker.makeXMLHttpRequest_ = function() {
+  return new XMLHttpRequest();
+}
+
+GmailAccountChecker.setTimeout_ = function(fn, timeout) {
+  return window.setTimeout(fn, timeout);
+}
+
+GmailAccountChecker.clearTimeout_ = function(id) {
+  window.clearTimeout(id);
+}
+
 function GmailAccountChecker(index, onUpdate) {
   this.onUpdate_ = onUpdate;
   this.requestFailures_ = 0;
@@ -12,31 +24,24 @@ function GmailAccountChecker(index, onUpdate) {
   this.startCheck();
 }
 
-GmailAccountChecker.prototype.setTimeout_ = function(fn, timeout) {
-  return window.setTimeout(fn, timeout);
-}
-GmailAccountChecker.prototype.clearTimeout_ = function(id) {
-  window.clearTimeout(id);
-}
-
 GmailAccountChecker.prototype.startCheck = function() {
-  var req = new XMLHttpRequest();
+  var req = GmailAccountChecker.makeXMLHttpRequest_();
 
   var requestTimeout = 5 * 1000;  // 5 seconds
-  var abortTimerId = this.setTimeout_(function() {
+  var abortTimerId = GmailAccountChecker.setTimeout_(function() {
     req.abort();
   }, requestTimeout);
 
   var self = this;
 
   var onSuccess = function() {
-    self.clearTimeout_(abortTimerId);
+    GmailAccountChecker.clearTimeout_(abortTimerId);
     self.parseFeed_(req.responseXML);
     self.scheduleNextCheck_();
   }
 
   var onError = function(error) {
-    self.clearTimeout_(abortTimerId);
+    GmailAccountChecker.clearTimeout_(abortTimerId);
     self.onError_(error);
     self.scheduleNextCheck_();
   }
@@ -110,7 +115,7 @@ GmailAccountChecker.prototype.parseFeed_ = function(xml) {
 
 GmailAccountChecker.prototype.scheduleNextCheck_ = function() {
   if (this.pendingRequestTimerId_) {
-    this.clearTimeout_(this.pendingRequestTimerId_);
+    GmailAccountChecker.clearTimeout_(this.pendingRequestTimerId_);
   }
   var pollIntervalMin = 60 * 1000;  // 1 minute
   var pollIntervalMax = 60 * 60 * 1000;  // 1 hour
@@ -122,7 +127,7 @@ GmailAccountChecker.prototype.scheduleNextCheck_ = function() {
 
   var self = this;
   this.pendingRequestTimerId_ =
-    this.setTimeout_(function() { self.startCheck(); }, delay);
+    GmailAccountChecker.setTimeout_(function() { self.startCheck(); }, delay);
 }
 
 GmailAccountChecker.prototype.onError_ = function(error) {
