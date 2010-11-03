@@ -39,7 +39,7 @@ describe('GmailAccountChecker', function () {
     expect(GmailAccountChecker.clearTimeout_).not.toHaveBeenCalled();
 
     fakeReq.status = 200;
-    var xml_text =
+    var xmlText =
       '<feed xmlns="http://purl.org/atom/ns#" version="0.3">' +
       '<title>Gmail - Inbox for foo@bar.com</title>' +
       '<tagline>New messages in your Gmail Inbox</tagline>' +
@@ -48,7 +48,7 @@ describe('GmailAccountChecker', function () {
       'type="text/html"/>' +
       '<modified>2010-11-02T03:35:17Z</modified>' +
       '</feed>';
-    var xml = stringToXml(xml_text);
+    var xml = stringToXml(xmlText);
     fakeReq.responseXML = xml;
     fakeReq.onload();
 
@@ -79,10 +79,10 @@ describe('GmailAccountChecker', function () {
     expect(GmailAccountChecker.clearTimeout_).not.toHaveBeenCalled();
 
     fakeReq.status = 200;
-    var xml_text =
+    var xmlText =
       '<feed xmlns="http://purl.org/atom/ns#" version="0.3">' +
       '</feed>';
-    var xml = stringToXml(xml_text);
+    var xml = stringToXml(xmlText);
     fakeReq.responseXML = xml;
     fakeReq.onload();
     expect(accountChecker.index).toEqual(1);
