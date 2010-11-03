@@ -14,7 +14,9 @@ function init() {
   var handler = function() {
     updateBadge(checker.unreadCount, checker.getTooltip());
   };
-  var checker = new GmailChecker(/@gmail\.com$/, handler);
+  var emailRegexpText = localStorage.emailRegexp || '.*';
+  var emailRegexp = new RegExp(emailRegexpText, '');
+  var checker = new GmailChecker(emailRegexp, handler);
 
   chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
     if (changeInfo.url) {
