@@ -1,3 +1,16 @@
+function GmailAccountChecker(index, onUpdate) {
+  this.onUpdate_ = onUpdate;
+  this.lastUpdated_ = null;
+  this.requestFailures_ = 0;
+  this.pendingRequestTimerId_ = null;
+
+  this.index = index;
+  this.email = null;
+  this.unreadCount = null;
+
+  this.startCheck();
+}
+
 GmailAccountChecker.prototype.get_gmail_url = function() {
   return "https://mail.google.com/mail/u/" + this.index + "/";
 }
@@ -66,10 +79,10 @@ GmailAccountChecker.prototype.schedule = function() {
 
   var self = this;
   this.pendingRequestTimerId_ =
-    window.setTimeout(function() { self.get_inbox_count(); }, delay);
+    window.setTimeout(function() { self.startCheck(); }, delay);
 }
 
-GmailAccountChecker.prototype.get_inbox_count = function() {
+GmailAccountChecker.prototype.startCheck = function() {
   var xhr = new XMLHttpRequest();
   var requestTimeout = 1000 * 2;  // 5 seconds
   var abortTimerId = window.setTimeout(function() {
@@ -104,16 +117,4 @@ GmailAccountChecker.prototype.get_inbox_count = function() {
     console.error(e);
     runHandler(null);
   }
-}
-
-function GmailAccountChecker(index, onUpdate) {
-  this.index = index;
-  this.email = null;
-  this.unreadCount = null;
-
-  this.onUpdate_ = onUpdate;
-  this.lastUpdated_ = null;
-  this.requestFailures_ = 0;
-  this.pendingRequestTimerId_ = null;
-  this.get_inbox_count();
 }

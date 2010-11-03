@@ -80,7 +80,7 @@ function init() {
     if (changeInfo.url) {
       index = getGmailUrlIndex(changeInfo.url);
       if (index != -1) {
-        account_checkers[index].get_inbox_count();
+        account_checkers[index].startCheck();
       }
     }
   });
