@@ -185,7 +185,7 @@ function goToInbox() {
       }
     }
     console.info("Going to default inbox");
-    chrome.tabs.create({url: (new GmailAccountChecker(0)).get_gmail_url()});
+    chrome.tabs.create({url: (new GmailAccountChecker(0)).getBaseUrl()});
   });
 }
 
