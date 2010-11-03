@@ -20,6 +20,13 @@ GmailAccountChecker.prototype.startCheck = function() {
   }, requestTimeout);
 
   var self = this;
+
+  var onSuccess = function() {
+    window.clearTimeout(abortTimerId);
+    self.parse_feed(xhr.responseXML);
+    self.schedule();
+  }
+
   var onFailure = function() {
     window.clearTimeout(abortTimerId);
     self.fail();
@@ -30,9 +37,7 @@ GmailAccountChecker.prototype.startCheck = function() {
     if (xhr.readyState != 4)
       return;
 
-    window.clearTimeout(abortTimerId);
-    self.parse_feed(xhr.responseXML);
-    self.schedule();
+    onSuccess();
   }
 
   xhr.onerror = function(error) {
