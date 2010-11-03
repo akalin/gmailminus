@@ -1,6 +1,7 @@
 <html>
 <head>
 <script type="text/javascript" src="GmailAccountChecker.js"></script>
+<script type="text/javascript" src="GmailChecker.js"></script>
 <script>
 var animationFrames = 36;
 var animationSpeed = 10; // ms
@@ -53,11 +54,6 @@ LoadingAnimation.prototype.stop = function() {
   this.timerId_ = 0;
 }
 
-function getGmailUrlIndex(url) {
-  var match = /^https:\/\/mail.google.com\/mail\/u\/([012])/.exec(url);
-  return match ? match[1] : -1;
-}
-
 function init() {
   canvas = document.getElementById('canvas');
   unknownImage = document.getElementById('unknown');
@@ -65,23 +61,18 @@ function init() {
   unreadImage = document.getElementById('unread');
   canvasContext = canvas.getContext('2d');
 
+  var loadingAnimation = new LoadingAnimation();
+
   var handler = function() {
-    if (loadingAnimation) loadingAnimation.stop();
-    updateUnreadCount(account_checkers);
+    loadingAnimation.stop();
+    animateFlip(checker.unreadCount);
   };
 
-  var account_checkers = [
-    new GmailAccountChecker(0, handler),
-    new GmailAccountChecker(1, handler),
-    new GmailAccountChecker(2, handler),
-  ];
+  var checker = new GmailChecker(/@gmail\.com$/, handler);
 
   chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
     if (changeInfo.url) {
-      index = getGmailUrlIndex(changeInfo.url);
-      if (index != -1) {
-        account_checkers[index].startCheck();
-      }
+      checker.onTabUpdated(changeInfo.url);
     }
   });
 
@@ -91,27 +82,20 @@ function init() {
     text: "?"
   });
 
-  var loadingAnimation = new LoadingAnimation();
+  // Called when the user clicks on the browser action.
+  chrome.browserAction.onClicked.addListener(function(tab) {
+    chrome.tabs.getAllInWindow(undefined, function(tabs) {
+      var i = checker.findInboxTab(tabs);
+      if (i != null) {
+        chrome.tabs.update(tab.id, {selected: true});
+      } else {
+        chrome.tabs.create({url: checker.getDefaultUrl()});
+      }
+    });
+  });
+
   loadingAnimation.start();
 }
-
-function calculateUnreadCount(account_checkers, email_re) {
-  var unreadCount = null;
-  for (i in account_checkers) {
-    if (email_re.test(account_checkers[i].email)) {
-      unreadCount = unreadCount || 0;
-      unreadCount += account_checkers[i].unreadCount;
-    }
-  }
-  return unreadCount;
-}
-
-function updateUnreadCount(account_checkers) {
-  var email_re = /@gmail\.com$/;
-  var unreadCount = calculateUnreadCount(account_checkers, email_re);
-  animateFlip(unreadCount);
-}
-
 
 function ease(x) {
   return (1-Math.sin(Math.PI/2+x*Math.PI))/2;
@@ -171,28 +155,6 @@ function drawIconAtRotation(unreadCount) {
   chrome.browserAction.setIcon({imageData:canvasContext.getImageData(0, 0,
       canvas.width,canvas.height)});
 }
-
-function goToInbox() {
-  chrome.tabs.getAllInWindow(undefined, function(tabs) {
-    for (var i = 0, tab; tab = tabs[i]; i++) {
-      if (tab.url) {
-        index = getGmailUrlIndex(tab.url);
-        console.info("Going to inbox " + index);
-        if (index != -1) {
-          chrome.tabs.update(tab.id, {selected: true});
-          return;
-        }
-      }
-    }
-    console.info("Going to default inbox");
-    chrome.tabs.create({url: (new GmailAccountChecker(0)).getBaseUrl()});
-  });
-}
-
-// Called when the user clicks on the browser action.
-chrome.browserAction.onClicked.addListener(function(tab) {
-  goToInbox();
-});
 
 </script>
 </head>
