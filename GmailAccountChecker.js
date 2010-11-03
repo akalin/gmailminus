@@ -113,6 +113,8 @@ GmailAccountChecker.prototype.parseFeed_ = function(xml) {
   this.lastUpdateTime = new Date();
   this.lastError = null;
   this.onUpdate_();
+
+  console.info('updated ' + this.index + ' to ' + email + ':' + fullCount);
 }
 
 GmailAccountChecker.prototype.scheduleNextCheck_ = function() {
@@ -141,4 +143,5 @@ GmailAccountChecker.prototype.onError_ = function(error) {
   this.lastUpdateTime = new Date();
   this.lastError = error;
   this.onUpdate_();
+  console.warn('got error for ' + 2 + ': ' + error);
 }
