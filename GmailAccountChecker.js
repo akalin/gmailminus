@@ -12,8 +12,12 @@ function GmailAccountChecker(index, onUpdate) {
   this.startCheck();
 }
 
-GmailAccountChecker.prototype.setTimeout_ = setTimeout;
-GmailAccountChecker.prototype.clearTimeout_ = clearTimeout;
+GmailAccountChecker.prototype.setTimeout_ = function(fn, timeout) {
+  return window.setTimeout(fn, timeout);
+}
+GmailAccountChecker.prototype.clearTimeout_ = function(id) {
+  window.clearTimeout(id);
+}
 
 GmailAccountChecker.prototype.startCheck = function() {
   var req = new XMLHttpRequest();
