@@ -19,25 +19,19 @@ GmailAccountChecker.prototype.startCheck = function() {
   }, requestTimeout);
 
   var self = this;
-  function runHandler(xml) {
-    window.clearTimeout(abortTimerId);
-    if (xml) {
-      self.parse_feed(xml);
-    } else {
-      self.fail();
-    }
-    self.schedule();
-  }
-
   xhr.onreadystatechange = function() {
     if (xhr.readyState != 4)
       return;
 
-    runHandler(xhr.responseXML);
+    window.clearTimeout(abortTimerId);
+    self.parse_feed(xhr.responseXML);
+    self.schedule();
   }
 
   xhr.onerror = function(error) {
-    runHandler(null);
+    window.clearTimeout(abortTimerId);
+    self.fail();
+    self.schedule();
   }
 
   xhr.open("GET", this.get_feed_url(), true);
