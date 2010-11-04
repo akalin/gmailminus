@@ -71,10 +71,20 @@ function init() {
 }
 
 function save() {
-  localStorage.emailRegexp = emailRegexpTextbox.value;
+  var emailRegexpText = emailRegexpTextbox.value;
+  var emailRegexp;
+  try {
+    emailRegexp = new RegExp(emailRegexpText, '');
+  }
+  catch(error) {
+    console.warn(error);
+    return;
+  }
+
+  localStorage.emailRegexp = emailRegexpText;
   markClean();
 
-  chrome.extension.getBackgroundPage().init();
+  chrome.extension.getBackgroundPage().updateEmailRegexp(emailRegexp);
 }
 
 function markDirty() {

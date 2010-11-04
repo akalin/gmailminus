@@ -1,7 +1,6 @@
 var MAX_ACCOUNTS = 3;
 
 function GmailChecker(emailRegexp, onUpdate) {
-  this.emailRegexp_ = emailRegexp;
   this.onUpdate_ = onUpdate;
   var self = this;
   var onAccountUpdate = function() {
@@ -12,6 +11,7 @@ function GmailChecker(emailRegexp, onUpdate) {
     this.accountCheckers_[i] = new GmailAccountChecker(i, onAccountUpdate);
   }
 
+  this.emailRegexp = emailRegexp;
   this.unreadCount = null;
 }
 
@@ -36,7 +36,7 @@ GmailChecker.prototype.getTooltip = function() {
     tooltip += i + '. ';
     if (email) {
       tooltip += email +
-	         (this.emailRegexp_.test(email) ? '*' : '') +
+	         (this.emailRegexp.test(email) ? '*' : '') +
 	         ': ' + accountChecker.unreadCount;
     } else {
       tooltip += '?: ?';
@@ -65,7 +65,7 @@ GmailChecker.prototype.getDefaultUrl = function() {
 GmailChecker.prototype.onAccountUpdate_ = function() {
   var newUnreadCount = null;
   for (var i = 0; i < MAX_ACCOUNTS; ++i) {
-    if (this.emailRegexp_.test(this.accountCheckers_[i].email)) {
+    if (this.emailRegexp.test(this.accountCheckers_[i].email)) {
       newUnreadCount = newUnreadCount || 0;
       newUnreadCount += this.accountCheckers_[i].unreadCount;
     }

@@ -4,13 +4,39 @@
 <script type="text/javascript" src="GmailAccountChecker.js"></script>
 <script type="text/javascript" src="GmailChecker.js"></script>
 <script>
-function init() {
-  chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]})
-  chrome.browserAction.setIcon({path: "gmail_unknown.png"});
-  chrome.browserAction.setBadgeText({
-    text: "..."
-  });
 
+chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]})
+chrome.browserAction.setIcon({path: "gmail_unknown.png"});
+chrome.browserAction.setBadgeText({
+    text: "..."
+});
+
+var checker = makeChecker();
+
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
+  if (changeInfo.url) {
+    checker.onTabUpdated(changeInfo.url);
+  }
+});
+
+// Called when the user clicks on the browser action.
+chrome.browserAction.onClicked.addListener(function(tab) {
+  chrome.tabs.getAllInWindow(undefined, function(tabs) {
+    var i = checker.findInboxTab(tabs);
+    if (i != null) {
+      chrome.tabs.update(tabs[i].id, {selected: true});
+    } else {
+      chrome.tabs.create({url: checker.getDefaultUrl()});
+    }
+  });
+});
+
+function updateEmailRegexp(emailRegexp) {
+  checker.emailRegexp = emailRegexp;
+  // TODO(akalin): Kick off check.
+}
+
+function makeChecker() {
   var handler = function() {
     updateBadge(checker.unreadCount, checker.getTooltip());
   };
@@ -24,24 +50,7 @@ function init() {
     emailRegexp = /.*/;
   }
   var checker = new GmailChecker(emailRegexp, handler);
-
-  chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
-    if (changeInfo.url) {
-      checker.onTabUpdated(changeInfo.url);
-    }
-  });
-
-  // Called when the user clicks on the browser action.
-  chrome.browserAction.onClicked.addListener(function(tab) {
-    chrome.tabs.getAllInWindow(undefined, function(tabs) {
-      var i = checker.findInboxTab(tabs);
-      if (i != null) {
-        chrome.tabs.update(tabs[i].id, {selected: true});
-      } else {
-        chrome.tabs.create({url: checker.getDefaultUrl()});
-      }
-    });
-  });
+  return checker;
 }
 
 function updateBadge(unreadCount, tooltip) {
