@@ -84,7 +84,7 @@ function save() {
   localStorage.emailRegexp = emailRegexpText;
   markClean();
 
-  chrome.extension.getBackgroundPage().updateEmailRegexp(emailRegexp);
+  chrome.extension.getBackgroundPage().checker.updateEmailRegexp(emailRegexp);
 }
 
 function markDirty() {
