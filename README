@@ -1,0 +1,25 @@
+Installation
+------------
+
+Go to chrome://extensions/ and click on "Load unpacked extension..."
+and navigate to this directory. (See
+http://code.google.com/chrome/extensions/getstarted.html for details.)
+
+Testing
+-------
+
+This repository uses Jasmine ( http://pivotal.github.com/jasmine/ )
+for unittesting.  You'll need to run:
+
+git submodule init
+git submodule update
+
+before the unittest page will work. (See
+https://git.wiki.kernel.org/index.php/GitSubmoduleTutorial for
+details.)
+
+Then, navigate to:
+
+chrome-extension://$extension_id/test.html
+
+where $extension_id is the id of the loaded extension.
