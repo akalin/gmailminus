@@ -1,0 +1,11 @@
+TODO
+----
+
+- Make real options page
+  - Move from email regexp to list of emails
+- Upload to Chrome Extension Gallery
+  - Remove unnecessary files
+    - Figure out what to do about translations.
+  - Pare down manifest permissions
+  - Write script to include only necessary files (e.g., no testing files)
+- Move some console log statements to console.debug
